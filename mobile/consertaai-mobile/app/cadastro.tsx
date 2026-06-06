@@ -31,7 +31,7 @@ export default function Cadastro() {
 
       await cadastro(username, email, password, firstName);
 
-      router.replace("/home" as any);
+      router.replace("/gps" as any);
     } catch (error) {
       Alert.alert("Erro", "Não foi possível criar sua conta.");
     } finally {

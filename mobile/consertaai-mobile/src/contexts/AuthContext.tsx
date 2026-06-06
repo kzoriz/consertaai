@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import api from "../services/api";
 
+const isWeb = typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+
 const storage = {
   async getItem(key: string) {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem(key);
+    if (isWeb) {
+      return window.localStorage.getItem(key);
     }
 
     const SecureStore = await import("expo-secure-store");
@@ -12,8 +14,8 @@ const storage = {
   },
 
   async setItem(key: string, value: string) {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(key, value);
+    if (isWeb) {
+      window.localStorage.setItem(key, value);
       return;
     }
 
@@ -22,8 +24,8 @@ const storage = {
   },
 
   async deleteItem(key: string) {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(key);
+    if (isWeb) {
+      window.localStorage.removeItem(key);
       return;
     }
 

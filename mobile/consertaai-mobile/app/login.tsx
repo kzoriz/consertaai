@@ -26,7 +26,7 @@ export default function Login() {
     try {
       setCarregando(true);
       await login(username, password);
-      router.replace("/home" as any);
+      router.replace("/gps" as any);
     } catch (error) {
       Alert.alert("Erro", "Usuário ou senha inválidos.");
     } finally {

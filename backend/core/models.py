@@ -68,11 +68,15 @@ class HistoricoManutencao(models.Model):
 class PerimetroGPS(models.Model):
     nome = models.CharField(max_length=100)
     descricao = models.TextField(blank=True, null=True)
-    coordenadas = models.JSONField(help_text="Lista de pontos latitude/longitude do polígono")
+
+    latitude_centro = models.FloatField()
+    longitude_centro = models.FloatField()
+    raio_metros = models.FloatField(default=50)
+
     ativo = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.nome
+        return f"{self.nome} - {self.raio_metros}m"
 
 
 class VerificacaoGPS(models.Model):

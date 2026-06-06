@@ -9,7 +9,7 @@ from ninja.security import HttpBearer
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from math import radians, sin, cos, sqrt, atan2
 from .models import (
     Sala,
     Equipamento,
@@ -21,6 +21,26 @@ from .models import (
 
 
 api = NinjaAPI(title="Conserta Aí API")
+
+def calcular_distancia_metros(lat1, lon1, lat2, lon2):
+    raio_terra = 6371000
+
+    lat1_rad = radians(lat1)
+    lon1_rad = radians(lon1)
+    lat2_rad = radians(lat2)
+    lon2_rad = radians(lon2)
+
+    delta_lat = lat2_rad - lat1_rad
+    delta_lon = lon2_rad - lon1_rad
+
+    a = (
+        sin(delta_lat / 2) ** 2
+        + cos(lat1_rad) * cos(lat2_rad) * sin(delta_lon / 2) ** 2
+    )
+
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    return raio_terra * c
 
 
 # =========================
@@ -137,14 +157,18 @@ class PerimetroGPSSchema(Schema):
     id: int
     nome: str
     descricao: Optional[str] = None
-    coordenadas: list
+    latitude_centro: float
+    longitude_centro: float
+    raio_metros: float
     ativo: bool
 
 
 class PerimetroGPSCreateSchema(Schema):
     nome: str
     descricao: Optional[str] = None
-    coordenadas: list
+    latitude_centro: float
+    longitude_centro: float
+    raio_metros: float = 50
     ativo: bool = True
 
 
@@ -161,8 +185,17 @@ class VerificacaoGPSCreateSchema(Schema):
     perimetro_id: int
     latitude: float
     longitude: float
-    dentro_perimetro: bool
 
+
+class VerificacaoGPSResponseSchema(Schema):
+    id: int
+    usuario_id: int
+    perimetro_id: int
+    latitude: float
+    longitude: float
+    dentro_perimetro: bool
+    distancia_metros: float
+    raio_metros: float
 
 # =========================
 # LOGIN / CADASTRO
@@ -339,12 +372,39 @@ def criar_perimetro(request, payload: PerimetroGPSCreateSchema):
     return PerimetroGPS.objects.create(**payload.dict())
 
 
-@api.post("/verificar-gps", response=VerificacaoGPSSchema, auth=jwt_auth)
-def registrar_verificacao_gps(request, payload: VerificacaoGPSCreateSchema):
-    return VerificacaoGPS.objects.create(
+@api.post(
+    "/verificar-gps",
+    response=VerificacaoGPSResponseSchema,
+    auth=jwt_auth
+)
+def registrar_verificacao_gps(
+    request,
+    payload: VerificacaoGPSCreateSchema
+):
+    perimetro = get_object_or_404(
+        PerimetroGPS,
+        id=payload.perimetro_id,
+        ativo=True
+    )
+
+    distancia = calcular_distancia_metros(
+        payload.latitude,
+        payload.longitude,
+        perimetro.latitude_centro,
+        perimetro.longitude_centro,
+    )
+
+    dentro = distancia <= perimetro.raio_metros
+
+    verificacao = VerificacaoGPS.objects.create(
         usuario=request.auth,
-        perimetro_id=payload.perimetro_id,
+        perimetro=perimetro,
         latitude=payload.latitude,
         longitude=payload.longitude,
-        dentro_perimetro=payload.dentro_perimetro,
+        dentro_perimetro=dentro,
     )
+
+    verificacao.distancia_metros = round(distancia, 2)
+    verificacao.raio_metros = perimetro.raio_metros
+
+    return verificacao
