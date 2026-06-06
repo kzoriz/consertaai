@@ -27,14 +27,15 @@ export default function Home() {
       >
         <Text style={styles.botaoTexto}>Meus Chamados</Text>
       </Pressable>
-      <Pressable
-        style={styles.botaoSair}
-        onPress={logout}
-      >
-        <Text style={styles.botaoTexto}>
-          Sair
-        </Text>
-      </Pressable>
+        <Pressable
+          style={styles.botaoSair}
+          onPress={async () => {
+            await logout();
+            router.replace("/login" as any);
+          }}
+        >
+          <Text style={styles.botaoTexto}>Sair</Text>
+        </Pressable>
     </View>
   );
 }

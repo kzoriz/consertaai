@@ -70,7 +70,10 @@ export default function ChamadosScreen() {
           data={chamados}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <Pressable
+              style={styles.card}
+              onPress={() => router.push(`/chamados/${item.id}` as any)}
+            >
               <Text style={styles.codigo}>Chamado #{item.id}</Text>
               <Text style={styles.status}>
                 Status: {formatarStatus(item.status_chamado)}
@@ -79,7 +82,7 @@ export default function ChamadosScreen() {
                 {item.descricao_problema}
               </Text>
               <Text>Equipamento ID: {item.equipamento_id}</Text>
-            </View>
+            </Pressable>
           )}
         />
       )}
