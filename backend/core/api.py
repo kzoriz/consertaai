@@ -197,6 +197,16 @@ class VerificacaoGPSResponseSchema(Schema):
     distancia_metros: float
     raio_metros: float
 
+
+class ChamadoStatusUpdateSchema(Schema):
+    status_chamado: str
+
+
+class HistoricoChamadoCreateSchema(Schema):
+    acao_realizada: str
+    tecnico_responsavel: Optional[str] = None
+    observacoes: Optional[str] = None
+
 # =========================
 # LOGIN / CADASTRO
 # =========================
@@ -408,3 +418,80 @@ def registrar_verificacao_gps(
     verificacao.raio_metros = perimetro.raio_metros
 
     return verificacao
+
+@api.get("/meus-chamados", response=List[ChamadoSchema], auth=jwt_auth)
+def meus_chamados(request):
+    return Chamado.objects.filter(usuario=request.auth).order_by("-data_hora_abertura")
+
+
+@api.put(
+    "/chamados/{chamado_id}/status",
+    response={200: ChamadoSchema, 400: dict},
+    auth=jwt_auth,
+)
+def atualizar_status_chamado(
+    request,
+    chamado_id: int,
+    payload: ChamadoStatusUpdateSchema,
+):
+    chamado = get_object_or_404(Chamado, id=chamado_id)
+
+    status_validos = [
+        "ABERTO",
+        "EM_ANDAMENTO",
+        "CONCLUIDO",
+        "CANCELADO",
+    ]
+
+    if payload.status_chamado not in status_validos:
+        return 400, {"erro": "Status inválido."}
+
+    chamado.status_chamado = payload.status_chamado
+
+    if payload.status_chamado == "CONCLUIDO":
+        from django.utils import timezone
+        chamado.data_hora_fechamento = timezone.now()
+        chamado.equipamento.status_atual = "OPERANDO"
+        chamado.equipamento.save()
+
+    elif payload.status_chamado == "EM_ANDAMENTO":
+        chamado.equipamento.status_atual = "MANUTENCAO"
+        chamado.equipamento.save()
+
+    elif payload.status_chamado == "ABERTO":
+        chamado.equipamento.status_atual = "DEFEITO"
+        chamado.equipamento.save()
+
+    chamado.save()
+
+    HistoricoManutencao.objects.create(
+        chamado=chamado,
+        acao_realizada=f"Status alterado para {payload.status_chamado}",
+        tecnico_responsavel=request.auth.get_full_name() or request.auth.username,
+    )
+
+    return 200, chamado
+
+
+@api.post(
+    "/chamados/{chamado_id}/historico",
+    response=HistoricoSchema,
+    auth=jwt_auth,
+)
+def adicionar_historico_chamado(
+    request,
+    chamado_id: int,
+    payload: HistoricoChamadoCreateSchema,
+):
+    chamado = get_object_or_404(Chamado, id=chamado_id)
+
+    historico = HistoricoManutencao.objects.create(
+        chamado=chamado,
+        acao_realizada=payload.acao_realizada,
+        tecnico_responsavel=payload.tecnico_responsavel
+        or request.auth.get_full_name()
+        or request.auth.username,
+        observacoes=payload.observacoes,
+    )
+
+    return historico

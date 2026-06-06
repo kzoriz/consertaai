@@ -21,7 +21,12 @@ export default function Home() {
           Salas
         </Text>
       </Pressable>
-
+      <Pressable
+        style={styles.botao}
+        onPress={() => router.push("/chamados" as any)}
+      >
+        <Text style={styles.botaoTexto}>Meus Chamados</Text>
+      </Pressable>
       <Pressable
         style={styles.botaoSair}
         onPress={logout}
