@@ -15,9 +15,9 @@ import { router, useLocalSearchParams } from "expo-router";
 import {
   obterChamado,
   listarHistoricoChamado,
-  atualizarStatusChamado,
-  adicionarHistoricoChamado,
+  atualizarChamadoTecnico,
 } from "../../src/services/chamados";
+import { useAuth } from "../../src/contexts/AuthContext";
 
 type Chamado = {
   id: number;
@@ -37,6 +37,7 @@ type Historico = {
 
 export default function ChamadoDetalheScreen() {
   const { id } = useLocalSearchParams();
+  const { user } = useAuth();
 
   const [chamado, setChamado] = useState<Chamado | null>(null);
   const [historicos, setHistoricos] = useState<Historico[]>([]);
@@ -45,6 +46,7 @@ export default function ChamadoDetalheScreen() {
 
   const [acao, setAcao] = useState("");
   const [observacoes, setObservacoes] = useState("");
+  const [statusSelecionado, setStatusSelecionado] = useState("");
 
   useEffect(() => {
     carregarDados();
@@ -59,6 +61,7 @@ export default function ChamadoDetalheScreen() {
 
       setChamado(chamadoData);
       setHistoricos(historicoData);
+      setStatusSelecionado(chamadoData.status_chamado);
     } catch (error) {
       Alert.alert("Erro", "Não foi possível carregar o chamado.");
     } finally {
@@ -66,22 +69,12 @@ export default function ChamadoDetalheScreen() {
     }
   }
 
-  async function alterarStatus(status: string) {
-    try {
-      setAtualizando(true);
-
-      await atualizarStatusChamado(String(id), status);
-      await carregarDados();
-
-      Alert.alert("Sucesso", "Status atualizado com sucesso.");
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível atualizar o status.");
-    } finally {
-      setAtualizando(false);
+  async function salvarAtualizacaoTecnica() {
+    if (!statusSelecionado) {
+      Alert.alert("Atenção", "Selecione um status.");
+      return;
     }
-  }
 
-  async function salvarHistorico() {
     if (!acao.trim()) {
       Alert.alert("Atenção", "Informe a ação realizada.");
       return;
@@ -90,16 +83,21 @@ export default function ChamadoDetalheScreen() {
     try {
       setAtualizando(true);
 
-      await adicionarHistoricoChamado(String(id), acao, observacoes);
+      await atualizarChamadoTecnico(
+        String(id),
+        statusSelecionado,
+        acao,
+        observacoes
+      );
 
       setAcao("");
       setObservacoes("");
 
       await carregarDados();
 
-      Alert.alert("Sucesso", "Histórico adicionado.");
+      Alert.alert("Sucesso", "Chamado atualizado com sucesso.");
     } catch (error) {
-      Alert.alert("Erro", "Não foi possível adicionar o histórico.");
+      Alert.alert("Erro", "Não foi possível atualizar o chamado.");
     } finally {
       setAtualizando(false);
     }
@@ -140,7 +138,9 @@ export default function ChamadoDetalheScreen() {
 
       <View style={styles.card}>
         <Text style={styles.label}>Status</Text>
-        <Text style={styles.status}>{formatarStatus(chamado.status_chamado)}</Text>
+        <Text style={styles.status}>
+          {formatarStatus(chamado.status_chamado)}
+        </Text>
 
         <Text style={styles.label}>Equipamento</Text>
         <Text>Equipamento ID: {chamado.equipamento_id}</Text>
@@ -149,62 +149,85 @@ export default function ChamadoDetalheScreen() {
         <Text>{chamado.descricao_problema}</Text>
       </View>
 
-      <Text style={styles.subtitulo}>Atualizar status</Text>
+      {user?.is_tecnico && (
+        <>
+          <Text style={styles.subtitulo}>Atualização técnica</Text>
 
-      <View style={styles.botoesLinha}>
-        <Pressable
-          style={styles.botao}
-          disabled={atualizando}
-          onPress={() => alterarStatus("EM_ANDAMENTO")}
-        >
-          <Text style={styles.botaoTexto}>Em andamento</Text>
-        </Pressable>
+          <View style={styles.statusGrid}>
+            <Pressable
+              style={[
+                styles.statusOption,
+                statusSelecionado === "ABERTO" && styles.statusSelecionado,
+              ]}
+              onPress={() => setStatusSelecionado("ABERTO")}
+            >
+              <Text style={styles.statusIcon}>🔴</Text>
+              <Text>Aberto</Text>
+            </Pressable>
 
-        <Pressable
-          style={styles.botaoVerde}
-          disabled={atualizando}
-          onPress={() => alterarStatus("CONCLUIDO")}
-        >
-          <Text style={styles.botaoTexto}>Concluir</Text>
-        </Pressable>
-      </View>
+            <Pressable
+              style={[
+                styles.statusOption,
+                statusSelecionado === "EM_ANDAMENTO" &&
+                  styles.statusSelecionado,
+              ]}
+              onPress={() => setStatusSelecionado("EM_ANDAMENTO")}
+            >
+              <Text style={styles.statusIcon}>🟡</Text>
+              <Text>Em andamento</Text>
+            </Pressable>
 
-      <Pressable
-        style={styles.botaoCinza}
-        disabled={atualizando}
-        onPress={() => alterarStatus("CANCELADO")}
-      >
-        <Text style={styles.botaoTexto}>Cancelar chamado</Text>
-      </Pressable>
+            <Pressable
+              style={[
+                styles.statusOption,
+                statusSelecionado === "CONCLUIDO" && styles.statusSelecionado,
+              ]}
+              onPress={() => setStatusSelecionado("CONCLUIDO")}
+            >
+              <Text style={styles.statusIcon}>🟢</Text>
+              <Text>Concluído</Text>
+            </Pressable>
 
-      <Text style={styles.subtitulo}>Adicionar histórico</Text>
+            <Pressable
+              style={[
+                styles.statusOption,
+                statusSelecionado === "CANCELADO" && styles.statusSelecionado,
+              ]}
+              onPress={() => setStatusSelecionado("CANCELADO")}
+            >
+              <Text style={styles.statusIcon}>⚫</Text>
+              <Text>Cancelado</Text>
+            </Pressable>
+          </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Ação realizada"
-        value={acao}
-        onChangeText={setAcao}
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="Ação realizada"
+            value={acao}
+            onChangeText={setAcao}
+          />
 
-      <TextInput
-        style={styles.textarea}
-        placeholder="Observações"
-        value={observacoes}
-        onChangeText={setObservacoes}
-        multiline
-        numberOfLines={4}
-        textAlignVertical="top"
-      />
+          <TextInput
+            style={styles.textarea}
+            placeholder="Observações"
+            value={observacoes}
+            onChangeText={setObservacoes}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
 
-      <Pressable
-        style={styles.botaoAzul}
-        disabled={atualizando}
-        onPress={salvarHistorico}
-      >
-        <Text style={styles.botaoTexto}>
-          {atualizando ? "Salvando..." : "Salvar histórico"}
-        </Text>
-      </Pressable>
+          <Pressable
+            style={[styles.botaoAzul, atualizando && styles.botaoDesabilitado]}
+            disabled={atualizando}
+            onPress={salvarAtualizacaoTecnica}
+          >
+            <Text style={styles.botaoTexto}>
+              {atualizando ? "Salvando..." : "Salvar atualização"}
+            </Text>
+          </Pressable>
+        </>
+      )}
 
       <Text style={styles.subtitulo}>Histórico</Text>
 
@@ -223,9 +246,7 @@ export default function ChamadoDetalheScreen() {
                 <Text>Técnico: {item.tecnico_responsavel}</Text>
               )}
 
-              {!!item.observacoes && (
-                <Text>Obs.: {item.observacoes}</Text>
-              )}
+              {!!item.observacoes && <Text>Obs.: {item.observacoes}</Text>}
             </View>
           )}
         />
@@ -284,43 +305,32 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  botoesLinha: {
+  statusGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
-    marginBottom: 10,
+    marginBottom: 14,
   },
 
-  botao: {
-    flex: 1,
-    backgroundColor: "#fb8c00",
-    padding: 12,
-    borderRadius: 8,
+  statusOption: {
+    width: "48%",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    padding: 14,
+    alignItems: "center",
   },
 
-  botaoVerde: {
-    flex: 1,
-    backgroundColor: "#43a047",
-    padding: 12,
-    borderRadius: 8,
+  statusSelecionado: {
+    borderColor: "#2196F3",
+    borderWidth: 2,
+    backgroundColor: "#e3f2fd",
   },
 
-  botaoCinza: {
-    backgroundColor: "#757575",
-    padding: 12,
-    borderRadius: 8,
-  },
-
-  botaoAzul: {
-    backgroundColor: "#2196F3",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-
-  botaoTexto: {
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
+  statusIcon: {
+    fontSize: 28,
+    marginBottom: 6,
   },
 
   input: {
@@ -340,6 +350,23 @@ const styles = StyleSheet.create({
     padding: 12,
     minHeight: 100,
     marginBottom: 10,
+  },
+
+  botaoAzul: {
+    backgroundColor: "#2196F3",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+
+  botaoDesabilitado: {
+    opacity: 0.6,
+  },
+
+  botaoTexto: {
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
   },
 
   historicoCard: {

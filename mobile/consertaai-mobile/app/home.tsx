@@ -12,7 +12,14 @@ export default function Home() {
       <Text style={styles.usuario}>
         Bem-vindo, {user?.first_name || user?.username}
       </Text>
-
+        {user?.is_tecnico && (
+          <Pressable
+            style={styles.botao}
+            onPress={() => router.push("/tecnico/chamados" as any)}
+          >
+            <Text style={styles.botaoTexto}>Painel Técnico</Text>
+          </Pressable>
+        )}
       <Pressable
         style={styles.botao}
         onPress={() => router.push("/salas")}

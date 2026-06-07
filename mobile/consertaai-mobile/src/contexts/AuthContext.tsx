@@ -39,6 +39,8 @@ type User = {
   username: string;
   email: string;
   first_name: string;
+  is_staff: boolean;
+  is_tecnico: boolean;
 };
 
 type AuthContextData = {

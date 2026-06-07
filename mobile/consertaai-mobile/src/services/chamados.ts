@@ -1,5 +1,21 @@
 import api from "./api";
 
+
+export async function atualizarChamadoTecnico(
+  chamadoId: string | number,
+  statusChamado: string,
+  acaoRealizada: string,
+  observacoes?: string
+) {
+  const response = await api.post(`/chamados/${chamadoId}/atualizar-tecnico`, {
+    status_chamado: statusChamado,
+    acao_realizada: acaoRealizada,
+    observacoes: observacoes || "",
+  });
+
+  return response.data;
+}
+
 export async function listarMeusChamados() {
   const response = await api.get("/meus-chamados");
   return response.data;

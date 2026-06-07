@@ -60,7 +60,8 @@ class JWTAuth(HttpBearer):
 
 jwt_auth = JWTAuth()
 
-
+def usuario_eh_tecnico(user):
+    return user.is_staff or user.groups.filter(name="Tecnico").exists()
 # =========================
 # SCHEMAS
 # =========================
@@ -89,6 +90,8 @@ class UsuarioSchema(Schema):
     username: str
     email: str
     first_name: str
+    is_staff: bool
+    is_tecnico: bool
 
 
 class SalaSchema(Schema):
@@ -207,6 +210,12 @@ class HistoricoChamadoCreateSchema(Schema):
     tecnico_responsavel: Optional[str] = None
     observacoes: Optional[str] = None
 
+
+class AtualizarChamadoTecnicoSchema(Schema):
+    status_chamado: str
+    acao_realizada: str
+    observacoes: Optional[str] = None
+
 # =========================
 # LOGIN / CADASTRO
 # =========================
@@ -258,7 +267,16 @@ def login_usuario(request, payload: LoginSchema):
 
 @api.get("/auth/me", response=UsuarioSchema, auth=jwt_auth)
 def meu_perfil(request):
-    return request.auth
+    user = request.auth
+
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "first_name": user.first_name,
+        "is_staff": user.is_staff,
+        "is_tecnico": usuario_eh_tecnico(user),
+    }
 
 
 # =========================
@@ -426,7 +444,7 @@ def meus_chamados(request):
 
 @api.put(
     "/chamados/{chamado_id}/status",
-    response={200: ChamadoSchema, 400: dict},
+    response={200: ChamadoSchema, 400: dict, 403: dict},
     auth=jwt_auth,
 )
 def atualizar_status_chamado(
@@ -435,7 +453,8 @@ def atualizar_status_chamado(
     payload: ChamadoStatusUpdateSchema,
 ):
     chamado = get_object_or_404(Chamado, id=chamado_id)
-
+    if not usuario_eh_tecnico(request.auth):
+        return 403, {"erro": "Apenas técnicos podem alterar o status do chamado."}
     status_validos = [
         "ABERTO",
         "EM_ANDAMENTO",
@@ -475,7 +494,7 @@ def atualizar_status_chamado(
 
 @api.post(
     "/chamados/{chamado_id}/historico",
-    response=HistoricoSchema,
+    response={201: HistoricoSchema, 403: dict},
     auth=jwt_auth,
 )
 def adicionar_historico_chamado(
@@ -484,7 +503,8 @@ def adicionar_historico_chamado(
     payload: HistoricoChamadoCreateSchema,
 ):
     chamado = get_object_or_404(Chamado, id=chamado_id)
-
+    if not usuario_eh_tecnico(request.auth):
+        return 403, {"erro": "Apenas técnicos podem adicionar histórico."}
     historico = HistoricoManutencao.objects.create(
         chamado=chamado,
         acao_realizada=payload.acao_realizada,
@@ -495,3 +515,69 @@ def adicionar_historico_chamado(
     )
 
     return historico
+
+@api.get(
+    "/tecnico/chamados",
+    response={200: List[ChamadoSchema], 403: dict},
+    auth=jwt_auth,
+)
+def listar_chamados_tecnico(request):
+    if not usuario_eh_tecnico(request.auth):
+        return 403, {"erro": "Apenas técnicos podem acessar todos os chamados."}
+
+    return 200, Chamado.objects.all().order_by("-data_hora_abertura")
+
+@api.post(
+    "/chamados/{chamado_id}/atualizar-tecnico",
+    response={200: ChamadoSchema, 400: dict, 403: dict},
+    auth=jwt_auth,
+)
+def atualizar_chamado_tecnico(request, chamado_id: int, payload: AtualizarChamadoTecnicoSchema):
+    chamado = get_object_or_404(Chamado, id=chamado_id)
+
+    if not usuario_eh_tecnico(request.auth):
+        return 403, {"erro": "Apenas técnicos podem atualizar chamados."}
+
+    status_validos = [
+        "ABERTO",
+        "EM_ANDAMENTO",
+        "CONCLUIDO",
+        "CANCELADO",
+    ]
+
+    if payload.status_chamado not in status_validos:
+        return 400, {"erro": "Status inválido."}
+
+    if not payload.acao_realizada.strip():
+        return 400, {"erro": "Informe a ação realizada."}
+
+    chamado.status_chamado = payload.status_chamado
+
+    if payload.status_chamado == "CONCLUIDO":
+        from django.utils import timezone
+        chamado.data_hora_fechamento = timezone.now()
+        chamado.equipamento.status_atual = "OPERANDO"
+        chamado.equipamento.save()
+
+    elif payload.status_chamado == "EM_ANDAMENTO":
+        chamado.equipamento.status_atual = "MANUTENCAO"
+        chamado.equipamento.save()
+
+    elif payload.status_chamado == "ABERTO":
+        chamado.equipamento.status_atual = "DEFEITO"
+        chamado.equipamento.save()
+
+    elif payload.status_chamado == "CANCELADO":
+        chamado.equipamento.status_atual = "OPERANDO"
+        chamado.equipamento.save()
+
+    chamado.save()
+
+    HistoricoManutencao.objects.create(
+        chamado=chamado,
+        acao_realizada=payload.acao_realizada,
+        tecnico_responsavel=request.auth.get_full_name() or request.auth.username,
+        observacoes=payload.observacoes,
+    )
+
+    return 200, chamado
