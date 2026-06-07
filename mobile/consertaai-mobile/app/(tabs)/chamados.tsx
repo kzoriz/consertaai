@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 
-import { listarMeusChamados } from "../src/services/chamados";
+import { listarMeusChamados } from "@/services/chamados";
 
 type Chamado = {
   id: number;

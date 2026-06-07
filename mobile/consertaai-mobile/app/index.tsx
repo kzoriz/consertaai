@@ -1,6 +1,6 @@
 import { Redirect } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
-import { useAuth } from "../src/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 export default function Index() {
@@ -15,7 +15,7 @@ export default function Index() {
   }
 
   if (user) {
-    return <Redirect href="/gps" />;
+    return <Redirect href="/(tabs)/gps" />;
   }
 
   return <Redirect href="/login" />;

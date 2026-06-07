@@ -10,7 +10,7 @@ import {
 import { router } from "expo-router";
 import * as Location from "expo-location";
 
-import { listarPerimetros, verificarGPS } from "../src/services/gps";
+import { listarPerimetros, verificarGPS } from "@/services/gps";
 
 export default function GPSScreen() {
   const [loading, setLoading] = useState(false);
@@ -63,7 +63,7 @@ export default function GPSScreen() {
           `Você está dentro do raio permitido. Distância: ${resultado.distancia_metros}m`
         );
 
-        router.replace("/home");
+        router.replace("/(tabs)/home");
       } else {
         Alert.alert(
           "Fora do perímetro",
