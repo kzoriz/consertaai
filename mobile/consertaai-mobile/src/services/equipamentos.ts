@@ -16,3 +16,10 @@ export async function abrirChamado(
 
   return response.data;
 }
+
+export async function listarChamadosDoEquipamento(
+  equipamentoId: string | number
+) {
+  const response = await api.get(`/equipamentos/${equipamentoId}/chamados`);
+  return response.data;
+}

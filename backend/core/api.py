@@ -639,3 +639,13 @@ def atualizar_chamado_tecnico(request, chamado_id: int, payload: AtualizarChamad
     )
 
     return 200, chamado
+
+@api.get(
+    "/equipamentos/{equipamento_id}/chamados",
+    response=List[ChamadoSchema],
+    auth=jwt_auth,
+)
+def chamados_do_equipamento(request, equipamento_id: int):
+    equipamento = get_object_or_404(Equipamento, id=equipamento_id)
+
+    return equipamento.chamados.all().order_by("-data_hora_abertura")
