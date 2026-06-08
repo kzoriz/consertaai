@@ -31,9 +31,9 @@ export default function Home() {
 
           <View style={styles.grid}>
             <MenuGridItem
-              title="Salas e Equipamentos"
-              icon="meeting-room"
-              onPress={() => router.push("/salas" as any)}
+              title="Localizar Sala"
+              icon="location-city"
+              onPress={() => router.push("/localizacao" as any)}
             />
 
             <MenuGridItem

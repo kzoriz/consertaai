@@ -1,22 +1,25 @@
 import { useEffect, useState } from "react";
-import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+  Modal,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 
-import { listarEquipamentosDaSala } from "../../src/services/salas";
-import { AppHeader } from "../../src/components/AppHeader";
-import { colors } from "../../src/theme/colors";
+import { listarEquipamentosDaSala } from "@/services/salas";
+import { AppHeader } from "@/components/AppHeader";
+import { SalaLayout } from "@/components/SalaLayout";
+import { colors } from "@/theme/colors";
+import { Equipamento } from "@/types/equipamentos";
 
-type Equipamento = {
-  id: number;
-  sala_id: number;
-  patrimonio: string;
-  tipo: string;
-  status_atual: string;
-};
 
 export default function SalaDetalheScreen() {
   const { id } = useLocalSearchParams();
+  const [equipamentoSelecionado, setEquipamentoSelecionado] = useState<Equipamento | null>(null);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,24 +36,13 @@ export default function SalaDetalheScreen() {
     }
   }
 
-  function getIcon(tipo: string) {
-    return tipo === "LUMINARIA" ? "lightbulb" : "ac-unit";
-  }
-
-  function getTipo(tipo: string) {
-    return tipo === "LUMINARIA" ? "Luminária" : "Ar-condicionado";
-  }
-
-  function getStatus(status: string) {
-    if (status === "OPERANDO") return "Operando";
-    if (status === "DEFEITO") return "Defeito";
-    if (status === "MANUTENCAO") return "Manutenção";
-    return status;
-  }
-
   return (
     <View style={styles.container}>
-      <AppHeader title="Equipamentos" subtitle="Ativos da sala selecionada" icon="construction" />
+      <AppHeader
+        title="Layout da Sala"
+        subtitle="Toque no equipamento para detalhes"
+        icon="meeting-room"
+      />
 
       <View style={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -61,68 +53,190 @@ export default function SalaDetalheScreen() {
         {loading ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text>Carregando equipamentos...</Text>
+            <Text>Carregando layout...</Text>
           </View>
         ) : equipamentos.length === 0 ? (
-          <Text style={styles.empty}>Nenhum equipamento cadastrado nesta sala.</Text>
+          <Text style={styles.empty}>
+            Nenhum equipamento cadastrado nesta sala.
+          </Text>
         ) : (
-          <FlatList
-            data={equipamentos}
-            keyExtractor={(item) => String(item.id)}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <Pressable
-                style={styles.card}
-                onPress={() => router.push(`/equipamentos/${item.id}` as any)}
-              >
-                <View style={styles.iconBox}>
-                  <MaterialIcons name={getIcon(item.tipo) as any} size={28} color={colors.primary} />
-                </View>
-
-                <View style={styles.cardContent}>
-                  <Text style={styles.tipo}>{getTipo(item.tipo)}</Text>
-                  <Text style={styles.info}>Patrimônio: {item.patrimonio}</Text>
-                  <Text style={styles.status}>Status: {getStatus(item.status_atual)}</Text>
-                </View>
-
-                <MaterialIcons name="chevron-right" size={26} color={colors.muted} />
-              </Pressable>
-            )}
-          />
+        <SalaLayout
+          equipamentos={equipamentos}
+          onPressEquipamento={(equipamento) =>
+            setEquipamentoSelecionado(equipamento)
+          }
+        />
         )}
       </View>
+      <Modal
+  visible={!!equipamentoSelecionado}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setEquipamentoSelecionado(null)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalCard}>
+      <Text style={styles.modalTitulo}>
+        {equipamentoSelecionado?.tipo === "LUMINARIA"
+          ? "💡 Luminária"
+          : "❄️ Ar-condicionado"}
+      </Text>
+
+      <Text style={styles.modalLabel}>Patrimônio</Text>
+      <Text style={styles.modalValor}>
+        {equipamentoSelecionado?.patrimonio}
+      </Text>
+
+      <Text style={styles.modalLabel}>Status</Text>
+      <Text style={styles.modalValor}>
+        {equipamentoSelecionado?.status_atual === "OPERANDO"
+          ? "Operando"
+          : equipamentoSelecionado?.status_atual === "DEFEITO"
+          ? "Defeito"
+          : "Manutenção"}
+      </Text>
+
+      <Text style={styles.modalLabel}>Sala</Text>
+      <Text style={styles.modalValor}>
+        {equipamentoSelecionado?.sala?.codigo_sala || "Não informado"}
+      </Text>
+
+      <Text style={styles.modalLabel}>Bloco</Text>
+      <Text style={styles.modalValor}>
+        {equipamentoSelecionado?.sala?.bloco || "Não informado"}
+      </Text>
+
+      <Text style={styles.modalLabel}>Andar</Text>
+      <Text style={styles.modalValor}>
+        {equipamentoSelecionado?.sala?.andar || "Não informado"}
+      </Text>
+
+      <Text style={styles.modalLabel}>Descrição da sala</Text>
+      <Text style={styles.modalValor}>
+        {equipamentoSelecionado?.sala?.descricao || "Não informado"}
+      </Text>
+
+      <Pressable
+        style={styles.botaoPrimario}
+        onPress={() => {
+          const equipamentoId = equipamentoSelecionado?.id;
+          setEquipamentoSelecionado(null);
+
+          if (equipamentoId) {
+            router.push(`/equipamentos/${equipamentoId}` as any);
+          }
+        }}
+      >
+        <Text style={styles.botaoPrimarioTexto}>Ver detalhes / Abrir chamado</Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.botaoSecundario}
+        onPress={() => setEquipamentoSelecionado(null)}
+      >
+        <Text style={styles.botaoSecundarioTexto}>Fechar</Text>
+      </Pressable>
     </View>
+  </View>
+</Modal>
+    </View>
+
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { flex: 1, padding: 20 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", gap: 10 },
-  backButton: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 16 },
-  backText: { color: colors.primary, fontWeight: "800" },
-  empty: { color: colors.muted, fontSize: 16 },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 14,
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  backButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 6,
+    marginBottom: 16,
   },
-  iconBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: "#EEF2FF",
-    alignItems: "center",
-    justifyContent: "center",
+
+  backText: {
+    color: colors.primary,
+    fontWeight: "800",
   },
-  cardContent: { flex: 1 },
-  tipo: { fontSize: 18, fontWeight: "800", color: colors.text },
-  info: { color: colors.muted, marginTop: 4 },
-  status: { color: colors.primary, fontWeight: "700", marginTop: 4 },
+
+  empty: {
+    color: colors.muted,
+    fontSize: 16,
+  },
+  modalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.45)",
+  justifyContent: "flex-end",
+},
+
+modalCard: {
+  backgroundColor: colors.surface,
+  borderTopLeftRadius: 28,
+  borderTopRightRadius: 28,
+  padding: 22,
+},
+
+modalTitulo: {
+  fontSize: 24,
+  fontWeight: "900",
+  color: colors.text,
+  marginBottom: 16,
+},
+
+modalLabel: {
+  fontSize: 12,
+  fontWeight: "800",
+  color: colors.muted,
+  marginTop: 10,
+  textTransform: "uppercase",
+},
+
+modalValor: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: colors.text,
+  marginTop: 2,
+},
+
+botaoPrimario: {
+  backgroundColor: colors.secondary,
+  padding: 14,
+  borderRadius: 14,
+  marginTop: 22,
+},
+
+botaoPrimarioTexto: {
+  textAlign: "center",
+  fontWeight: "900",
+  color: colors.text,
+},
+
+botaoSecundario: {
+  padding: 14,
+  borderRadius: 14,
+  marginTop: 10,
+  borderWidth: 1,
+  borderColor: colors.border,
+},
+
+botaoSecundarioTexto: {
+  textAlign: "center",
+  fontWeight: "800",
+  color: colors.primary,
+},
 });

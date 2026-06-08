@@ -96,6 +96,7 @@ class UsuarioSchema(Schema):
 
 class SalaSchema(Schema):
     id: int
+    predio: str
     codigo_sala: str
     bloco: str
     andar: str
@@ -103,6 +104,15 @@ class SalaSchema(Schema):
 
 
 class SalaCreateSchema(Schema):
+    predio: str = "PREDIO_PRINCIPAL"
+    codigo_sala: str
+    bloco: str
+    andar: str
+    descricao: Optional[str] = None
+
+class SalaResumoSchema(Schema):
+    id: int
+    predio: str
     codigo_sala: str
     bloco: str
     andar: str
@@ -112,9 +122,12 @@ class SalaCreateSchema(Schema):
 class EquipamentoSchema(Schema):
     id: int
     sala_id: int
+    sala: SalaResumoSchema
     patrimonio: str
     tipo: str
     status_atual: str
+    posicao_x: float
+    posicao_y: float
 
 
 class EquipamentoCreateSchema(Schema):
@@ -122,6 +135,8 @@ class EquipamentoCreateSchema(Schema):
     patrimonio: str
     tipo: str
     status_atual: str = "OPERANDO"
+    posicao_x: float = 50
+    posicao_y: float = 50
 
 
 class EquipamentoStatusSchema(Schema):
@@ -216,6 +231,10 @@ class AtualizarChamadoTecnicoSchema(Schema):
     acao_realizada: str
     observacoes: Optional[str] = None
 
+
+
+
+
 # =========================
 # LOGIN / CADASTRO
 # =========================
@@ -292,6 +311,42 @@ def listar_salas(request):
 def criar_sala(request, payload: SalaCreateSchema):
     return Sala.objects.create(**payload.dict())
 
+@api.get("/salas/predios", response=List[str])
+def listar_predios(request):
+    return list(
+        Sala.objects.values_list("predio", flat=True)
+        .distinct()
+        .order_by("predio")
+    )
+
+
+@api.get("/salas/andares", response=List[str])
+def listar_andares(request, predio: str):
+    return list(
+        Sala.objects.filter(predio=predio)
+        .values_list("andar", flat=True)
+        .distinct()
+        .order_by("andar")
+    )
+
+
+@api.get("/salas/blocos", response=List[str])
+def listar_blocos(request, predio: str, andar: str):
+    return list(
+        Sala.objects.filter(predio=predio, andar=andar)
+        .values_list("bloco", flat=True)
+        .distinct()
+        .order_by("bloco")
+    )
+
+
+@api.get("/salas/por-local", response=List[SalaSchema])
+def listar_salas_por_local(request, predio: str, andar: str, bloco: str):
+    return Sala.objects.filter(
+        predio=predio,
+        andar=andar,
+        bloco=bloco,
+    ).order_by("codigo_sala")
 
 @api.get("/salas/{sala_id}", response=SalaSchema)
 def obter_sala(request, sala_id: int):
@@ -301,7 +356,7 @@ def obter_sala(request, sala_id: int):
 @api.get("/salas/{sala_id}/equipamentos", response=List[EquipamentoSchema])
 def equipamentos_da_sala(request, sala_id: int):
     sala = get_object_or_404(Sala, id=sala_id)
-    return sala.equipamentos.all()
+    return sala.equipamentos.select_related("sala").all()
 
 
 # =========================
@@ -320,7 +375,10 @@ def criar_equipamento(request, payload: EquipamentoCreateSchema):
 
 @api.get("/equipamentos/{equipamento_id}", response=EquipamentoSchema)
 def obter_equipamento(request, equipamento_id: int):
-    return get_object_or_404(Equipamento, id=equipamento_id)
+    return get_object_or_404(
+        Equipamento.objects.select_related("sala"),
+        id=equipamento_id
+    )
 
 
 @api.put(

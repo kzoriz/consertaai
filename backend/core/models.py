@@ -3,13 +3,33 @@ from django.contrib.auth.models import User
 
 
 class Sala(models.Model):
+    PREDIO_CHOICES = [
+        ("PREDIO_PRINCIPAL", "Prédio Principal"),
+        ("COMPLEXO", "Complexo"),
+    ]
+
+    predio = models.CharField(
+        max_length=50,
+        choices=PREDIO_CHOICES,
+        default="PREDIO_PRINCIPAL",
+    )
+
     codigo_sala = models.CharField(max_length=50, unique=True)
-    bloco = models.CharField(max_length=100)
-    andar = models.CharField(max_length=50)
+
+    bloco = models.CharField(
+        max_length=100,
+        help_text="Ex: Bloco A, Informática, Auditório, Projeto Educa"
+    )
+
+    andar = models.CharField(
+        max_length=50,
+        help_text="Ex: Térreo, 1º Andar, 2º Andar, 3º Andar"
+    )
+
     descricao = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.codigo_sala
+        return f"{self.codigo_sala} - {self.get_predio_display()}"
 
 
 class Equipamento(models.Model):
@@ -28,6 +48,8 @@ class Equipamento(models.Model):
     patrimonio = models.CharField(max_length=100, unique=True)
     tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
     status_atual = models.CharField(max_length=30, choices=STATUS_CHOICES, default="OPERANDO")
+    posicao_x = models.FloatField(default=50)
+    posicao_y = models.FloatField(default=50)
     data_cadastro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
