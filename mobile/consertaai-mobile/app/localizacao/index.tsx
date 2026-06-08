@@ -70,12 +70,17 @@ export default function PrediosScreen() {
               title={nomePredio(item)}
               subtitle={descricaoPredio(item)}
               icon={iconePredio(item) as any}
-              onPress={() =>
+              onPress={() => {
+                if (item === "COMPLEXO") {
+                  router.push("/localizacao/planta-complexo" as any);
+                  return;
+                }
+
                 router.push({
                   pathname: "/localizacao/andares",
                   params: { predio: item },
-                })
-              }
+                });
+              }}
             />
           )}
         />
