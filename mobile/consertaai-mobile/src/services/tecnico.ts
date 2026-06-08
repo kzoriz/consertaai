@@ -1,6 +1,6 @@
 import api from "./api";
-
-export async function listarChamadosTecnico() {
+import { ChamadoTecnico } from "@/types/chamadoTecnico";
+export async function listarChamadosTecnico(): Promise<ChamadoTecnico[]> {
   const response = await api.get("/tecnico/chamados");
   return response.data;
 }

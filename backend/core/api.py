@@ -151,6 +151,16 @@ class ChamadoSchema(Schema):
     prioridade: str
     status_chamado: str
 
+class ChamadoTecnicoSchema(Schema):
+    id: int
+    usuario_id: int
+    equipamento_id: int
+    descricao_problema: str
+    prioridade: str
+    status_chamado: str
+    ultima_acao: Optional[str] = None
+    equipamento: EquipamentoSchema
+
 
 class ChamadoCreateSchema(Schema):
     equipamento_id: int
@@ -579,14 +589,48 @@ def adicionar_historico_chamado(
 
 @api.get(
     "/tecnico/chamados",
-    response={200: List[ChamadoSchema], 403: dict},
+    response={200: List[ChamadoTecnicoSchema], 403: dict},
     auth=jwt_auth,
 )
 def listar_chamados_tecnico(request):
     if not usuario_eh_tecnico(request.auth):
         return 403, {"erro": "Apenas técnicos podem acessar todos os chamados."}
 
-    return 200, Chamado.objects.all().order_by("-data_hora_abertura")
+    chamados = (
+        Chamado.objects
+        .select_related(
+            "equipamento",
+            "equipamento__sala",
+        )
+        .prefetch_related("historicos")
+        .order_by("-data_hora_abertura")
+    )
+
+    resultado = []
+
+    for chamado in chamados:
+        ultimo_historico = (
+            chamado.historicos
+            .order_by("-id")
+            .first()
+        )
+
+        resultado.append({
+            "id": chamado.id,
+            "usuario_id": chamado.usuario_id,
+            "equipamento_id": chamado.equipamento_id,
+            "descricao_problema": chamado.descricao_problema,
+            "prioridade": chamado.prioridade,
+            "status_chamado": chamado.status_chamado,
+            "ultima_acao": (
+                ultimo_historico.acao_realizada
+                if ultimo_historico
+                else None
+            ),
+            "equipamento": chamado.equipamento,
+        })
+
+    return 200, resultado
 
 @api.post(
     "/chamados/{chamado_id}/atualizar-tecnico",
