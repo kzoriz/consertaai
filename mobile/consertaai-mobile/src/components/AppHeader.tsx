@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { colors } from "../theme/colors";
 
@@ -10,31 +11,38 @@ type Props = {
 
 export function AppHeader({ title, subtitle, icon = "construction" }: Props) {
   return (
-    <View style={styles.header}>
-      <View style={styles.iconBox}>
-        <MaterialIcons name={icon} size={26} color="#fff" />
-      </View>
+    <SafeAreaView edges={["top"]} style={styles.safe}>
+      <View style={styles.header}>
+        <View style={styles.iconBox}>
+          <MaterialIcons name={icon} size={26} color="#fff" />
+        </View>
 
-      <View>
-        <Text style={styles.title}>{title}</Text>
-        {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+        <View style={styles.textBox}>
+          <Text style={styles.title}>{title}</Text>
+          {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: {
+    backgroundColor: colors.primary,
+  },
+
   header: {
     backgroundColor: colors.primary,
-    paddingTop: 48,
-    paddingBottom: 24,
     paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 22,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
   },
+
   iconBox: {
     width: 48,
     height: 48,
@@ -43,11 +51,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
+  textBox: {
+    flex: 1,
+  },
+
   title: {
     color: "#fff",
     fontSize: 23,
     fontWeight: "bold",
   },
+
   subtitle: {
     color: "#E6F6FC",
     marginTop: 2,

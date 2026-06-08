@@ -1,10 +1,14 @@
 import { Tabs } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/theme/colors";
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
+      initialRouteName="home"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
@@ -12,13 +16,13 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: 64,
-          paddingBottom: 8,
+          height: 64 + insets.bottom,
           paddingTop: 8,
+          paddingBottom: Math.max(insets.bottom, 8),
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: "600",
+          fontWeight: "700",
         },
       }}
     >
@@ -38,16 +42,6 @@ export default function TabsLayout() {
           title: "Chamados",
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="assignment" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="gps"
-        options={{
-          title: "GPS",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="my-location" size={size} color={color} />
           ),
         }}
       />

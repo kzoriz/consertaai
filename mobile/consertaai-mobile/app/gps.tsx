@@ -63,7 +63,7 @@ export default function GPSScreen() {
           `Você está dentro do raio permitido. Distância: ${resultado.distancia_metros}m`
         );
 
-        router.replace("/(tabs)/home");
+        router.replace("/(tabs)/home" as any);
       } else {
         Alert.alert(
           "Fora do perímetro",

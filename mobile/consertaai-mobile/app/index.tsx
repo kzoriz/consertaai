@@ -15,7 +15,7 @@ export default function Index() {
   }
 
   if (user) {
-    return <Redirect href="/(tabs)/gps" />;
+   return <Redirect href="/gps" />;
   }
 
   return <Redirect href="/login" />;
