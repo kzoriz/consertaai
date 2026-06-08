@@ -49,6 +49,7 @@ export default function EquipamentoDetalheScreen() {
   const [descricao, setDescricao] = useState("");
   const [loading, setLoading] = useState(true);
   const [enviando, setEnviando] = useState(false);
+  const [prioridade, setPrioridade] = useState("MEDIA");
 
   useEffect(() => {
     carregarEquipamento();
@@ -87,10 +88,10 @@ export default function EquipamentoDetalheScreen() {
           ? descricao
           : `${problemaSelecionado}${descricao ? ` - ${descricao}` : ""}`;
 
-      await abrirChamado(String(id), textoChamado);
+      await abrirChamado(String(id), textoChamado, prioridade);
 
       Alert.alert("Sucesso", "Chamado aberto com sucesso.");
-
+      setPrioridade("MEDIA");
       setProblemaSelecionado("");
       setDescricao("");
 
@@ -317,7 +318,60 @@ export default function EquipamentoDetalheScreen() {
             numberOfLines={5}
             textAlignVertical="top"
           />
+          <Text style={styles.label}>Prioridade</Text>
 
+<View style={styles.priorityGrid}>
+  <Pressable
+    style={[
+      styles.priorityChip,
+      prioridade === "BAIXA" && styles.priorityBaixaActive,
+    ]}
+    onPress={() => setPrioridade("BAIXA")}
+  >
+    <Text
+      style={[
+        styles.priorityText,
+        prioridade === "BAIXA" && styles.priorityTextActive,
+      ]}
+    >
+      Baixa
+    </Text>
+  </Pressable>
+
+  <Pressable
+    style={[
+      styles.priorityChip,
+      prioridade === "MEDIA" && styles.priorityMediaActive,
+    ]}
+    onPress={() => setPrioridade("MEDIA")}
+  >
+    <Text
+      style={[
+        styles.priorityText,
+        prioridade === "MEDIA" && styles.priorityTextActive,
+      ]}
+    >
+      Média
+    </Text>
+  </Pressable>
+
+  <Pressable
+    style={[
+      styles.priorityChip,
+      prioridade === "ALTA" && styles.priorityAltaActive,
+    ]}
+    onPress={() => setPrioridade("ALTA")}
+  >
+    <Text
+      style={[
+        styles.priorityText,
+        prioridade === "ALTA" && styles.priorityTextActive,
+      ]}
+    >
+      Alta
+    </Text>
+  </Pressable>
+</View>
           <Pressable
             style={[styles.openButton, enviando && styles.disabledButton]}
             onPress={handleAbrirChamado}
@@ -589,5 +643,44 @@ chamadoStatus: {
   fontWeight: "900",
   color: colors.primary,
   fontSize: 12,
+},
+  priorityGrid: {
+  flexDirection: "row",
+  gap: 10,
+  marginBottom: 14,
+},
+
+priorityChip: {
+  flex: 1,
+  borderWidth: 1,
+  borderColor: colors.border,
+  borderRadius: 999,
+  paddingVertical: 10,
+  alignItems: "center",
+  backgroundColor: "#fff",
+},
+
+priorityBaixaActive: {
+  backgroundColor: colors.success,
+  borderColor: colors.success,
+},
+
+priorityMediaActive: {
+  backgroundColor: colors.warning,
+  borderColor: colors.warning,
+},
+
+priorityAltaActive: {
+  backgroundColor: colors.danger,
+  borderColor: colors.danger,
+},
+
+priorityText: {
+  fontWeight: "900",
+  color: colors.text,
+},
+
+priorityTextActive: {
+  color: "#fff",
 },
 });

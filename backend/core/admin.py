@@ -8,7 +8,6 @@ from .models import (
     VerificacaoGPS,
 )
 
-admin.site.register(Chamado)
 admin.site.register(HistoricoManutencao)
 admin.site.register(VerificacaoGPS)
 
@@ -55,4 +54,25 @@ class SalaAdmin(admin.ModelAdmin):
         "codigo_sala",
         "descricao",
         "bloco",
+    )
+
+@admin.register(Chamado)
+class ChamadoAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "usuario",
+        "equipamento",
+        "status_chamado",
+        "prioridade",
+        "data_hora_abertura",
+    )
+    list_filter = (
+        "status_chamado",
+        "prioridade",
+        "data_hora_abertura",
+    )
+    search_fields = (
+        "descricao_problema",
+        "equipamento__patrimonio",
+        "usuario__username",
     )

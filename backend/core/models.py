@@ -63,10 +63,20 @@ class Chamado(models.Model):
         ("CONCLUIDO", "Concluído"),
         ("CANCELADO", "Cancelado"),
     ]
+    PRIORIDADE_CHOICES = [
+        ("BAIXA", "Baixa"),
+        ("MEDIA", "Média"),
+        ("ALTA", "Alta"),
+    ]
 
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chamados")
     equipamento = models.ForeignKey(Equipamento, on_delete=models.CASCADE, related_name="chamados")
     descricao_problema = models.TextField()
+    prioridade = models.CharField(
+        max_length=20,
+        choices=PRIORIDADE_CHOICES,
+        default="MEDIA",
+    )
     status_chamado = models.CharField(max_length=30, choices=STATUS_CHOICES, default="ABERTO")
     data_hora_abertura = models.DateTimeField(auto_now_add=True)
     data_hora_fechamento = models.DateTimeField(blank=True, null=True)

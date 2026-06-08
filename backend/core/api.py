@@ -148,12 +148,14 @@ class ChamadoSchema(Schema):
     usuario_id: int
     equipamento_id: int
     descricao_problema: str
+    prioridade: str
     status_chamado: str
 
 
 class ChamadoCreateSchema(Schema):
     equipamento_id: int
     descricao_problema: str
+    prioridade: str = "MEDIA"
 
 
 class HistoricoSchema(Schema):
@@ -412,6 +414,7 @@ def criar_chamado(request, payload: ChamadoCreateSchema):
         usuario=request.auth,
         equipamento_id=payload.equipamento_id,
         descricao_problema=payload.descricao_problema,
+        prioridade=payload.prioridade,
     )
 
     chamado.equipamento.status_atual = "DEFEITO"

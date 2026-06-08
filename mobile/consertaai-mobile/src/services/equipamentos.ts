@@ -7,11 +7,13 @@ export async function obterEquipamento(equipamentoId: string | number) {
 
 export async function abrirChamado(
   equipamentoId: string | number,
-  descricaoProblema: string
+  descricaoProblema: string,
+  prioridade: string = "MEDIA"
 ) {
   const response = await api.post("/chamados", {
     equipamento_id: Number(equipamentoId),
     descricao_problema: descricaoProblema,
+    prioridade,
   });
 
   return response.data;
