@@ -251,7 +251,27 @@ class AtualizarChamadoTecnicoSchema(Schema):
     acao_realizada: str
     observacoes: Optional[str] = None
 
+class SalaStatusDashboardSchema(Schema):
+    sala_id: int
+    codigo_sala: str
+    predio: str
+    bloco: str
+    andar: str
+    descricao: Optional[str] = None
+    status: str
+    chamados_abertos: int
+    chamados_em_andamento: int
 
+
+class DashboardAdminSchema(Schema):
+    chamados_abertos: int
+    chamados_em_andamento: int
+    chamados_concluidos: int
+    chamados_cancelados: int
+    equipamentos_com_defeito: int
+    equipamentos_em_manutencao: int
+    total_equipamentos: int
+    salas_status: List[SalaStatusDashboardSchema]
 
 
 
@@ -710,3 +730,78 @@ def chamados_do_equipamento(request, equipamento_id: int):
     equipamento = get_object_or_404(Equipamento, id=equipamento_id)
 
     return equipamento.chamados.all().order_by("-data_hora_abertura")
+
+@api.get(
+    "/admin/dashboard",
+    response={200: DashboardAdminSchema, 403: dict},
+    auth=jwt_auth,
+)
+def dashboard_admin(request):
+    if not usuario_eh_tecnico(request.auth):
+        return 403, {"erro": "Apenas técnicos podem acessar o dashboard."}
+
+    chamados_abertos = Chamado.objects.filter(status_chamado="ABERTO").count()
+    chamados_em_andamento = Chamado.objects.filter(
+        status_chamado="EM_ANDAMENTO"
+    ).count()
+    chamados_concluidos = Chamado.objects.filter(
+        status_chamado="CONCLUIDO"
+    ).count()
+    chamados_cancelados = Chamado.objects.filter(
+        status_chamado="CANCELADO"
+    ).count()
+
+    equipamentos_com_defeito = Equipamento.objects.filter(
+        status_atual="DEFEITO"
+    ).count()
+    equipamentos_em_manutencao = Equipamento.objects.filter(
+        status_atual="MANUTENCAO"
+    ).count()
+    total_equipamentos = Equipamento.objects.count()
+
+    salas_status = []
+
+    salas = Sala.objects.all().order_by("predio", "andar", "codigo_sala")
+
+    for sala in salas:
+        chamados_sala = Chamado.objects.filter(
+            equipamento__sala=sala
+        )
+
+        abertos_sala = chamados_sala.filter(
+            status_chamado="ABERTO"
+        ).count()
+
+        andamento_sala = chamados_sala.filter(
+            status_chamado="EM_ANDAMENTO"
+        ).count()
+
+        if abertos_sala > 0:
+            status = "ABERTO"
+        elif andamento_sala > 0:
+            status = "EM_ANDAMENTO"
+        else:
+            status = "NORMAL"
+
+        salas_status.append({
+            "sala_id": sala.id,
+            "codigo_sala": sala.codigo_sala,
+            "predio": sala.predio,
+            "bloco": sala.bloco,
+            "andar": sala.andar,
+            "descricao": sala.descricao,
+            "status": status,
+            "chamados_abertos": abertos_sala,
+            "chamados_em_andamento": andamento_sala,
+        })
+
+    return 200, {
+        "chamados_abertos": chamados_abertos,
+        "chamados_em_andamento": chamados_em_andamento,
+        "chamados_concluidos": chamados_concluidos,
+        "chamados_cancelados": chamados_cancelados,
+        "equipamentos_com_defeito": equipamentos_com_defeito,
+        "equipamentos_em_manutencao": equipamentos_em_manutencao,
+        "total_equipamentos": total_equipamentos,
+        "salas_status": salas_status,
+    }

@@ -50,6 +50,14 @@ export default function Home() {
                 onPress={() => router.push("/tecnico/chamados" as any)}
               />
             )}
+            {user?.is_tecnico && (
+            <MenuGridItem
+              title="Dashboard"
+              icon="dashboard"
+              highlight
+              onPress={() => router.push("/tecnico/dashboard" as any)}
+            />
+            )}
           </View>
 
         </View>
