@@ -18,7 +18,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { SalaLayout } from "@/components/SalaLayout";
 import { colors } from "@/theme/colors";
 import { Equipamento } from "@/types/equipamentos";
-
+import { BackButton } from "@/components/BackButton";
 type Sala = {
   id: number;
   codigo_sala: string;
@@ -57,13 +57,10 @@ export default function SalaDetalheScreen() {
       subtitle={`${sala?.codigo_sala || ""} • ${sala?.bloco || ""} • ${sala?.andar || ""}`}
       icon="meeting-room"
     />
-
+      <View style={{ paddingHorizontal: 20 }}>
+        <BackButton />
+      </View>
       <View style={styles.content}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={20} color={colors.primary} />
-          <Text style={styles.backText}>Voltar</Text>
-        </Pressable>
-
         {loading ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={colors.primary} />

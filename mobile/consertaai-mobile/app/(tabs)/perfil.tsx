@@ -1,8 +1,8 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { router } from "expo-router";
-import { useAuth } from "../../src/contexts/AuthContext";
-import { AppHeader } from "../../src/components/AppHeader";
-import { colors } from "../../src/theme/colors";
+import { useAuth } from "@/contexts/AuthContext";
+import { AppHeader } from "@/components/AppHeader";
+import { colors } from "@/theme/colors";
 
 export default function PerfilScreen() {
   const { user, logout } = useAuth();

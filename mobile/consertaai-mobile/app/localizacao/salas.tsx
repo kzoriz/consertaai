@@ -10,12 +10,12 @@ import {
 
 import { router, useLocalSearchParams } from "expo-router";
 
-import { listarSalasPorLocal } from "../../src/services/localizacao";
+import { listarSalasPorLocal } from "@/services/localizacao";
 
-import { AppHeader } from "../../src/components/AppHeader";
-import { colors } from "../../src/theme/colors";
+import { AppHeader } from "@/components/AppHeader";
+import { colors } from "@/theme/colors";
 import {LocationOptionCard} from "@/components/LocationOptionCard";
-
+import { BackButton } from "@/components/BackButton";
 type Sala = {
   id: number;
   codigo_sala: string;
@@ -56,7 +56,9 @@ export default function SalasLocalizacaoScreen() {
         subtitle={String(bloco)}
         icon="meeting-room"
       />
-
+        <View style={{ paddingHorizontal: 20 }}>
+          <BackButton />
+        </View>
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator

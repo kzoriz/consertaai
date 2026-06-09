@@ -6,6 +6,7 @@ import { listarPredios } from "@/services/localizacao";
 import { AppHeader } from "@/components/AppHeader";
 import { LocationOptionCard } from "@/components/LocationOptionCard";
 import { colors } from "@/theme/colors";
+import { BackButton } from "@/components/BackButton";
 
 export default function PrediosScreen() {
   const [predios, setPredios] = useState<string[]>([]);
@@ -55,7 +56,9 @@ export default function PrediosScreen() {
         subtitle="Escolha o prédio onde você está"
         icon="location-city"
       />
-
+        <View style={{ paddingHorizontal: 20 }}>
+          <BackButton />
+        </View>
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />

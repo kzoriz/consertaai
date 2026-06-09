@@ -7,7 +7,7 @@ import { listarAndares } from "@/services/localizacao";
 import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/colors";
 import { LocationOptionCard } from "@/components/LocationOptionCard";
-
+import { BackButton } from "@/components/BackButton";
 export default function AndaresScreen() {
   const { predio } = useLocalSearchParams();
 
@@ -49,7 +49,9 @@ export default function AndaresScreen() {
         }
         icon="stairs"
       />
-
+      <View style={{ paddingHorizontal: 20 }}>
+        <BackButton />
+      </View>
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -98,13 +100,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 
-  content: {
-    padding: 20,
-  },
+
 
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
+  content: {
+  flex: 1,
+  paddingHorizontal: 20,
+  paddingTop: 12,
+},
 });

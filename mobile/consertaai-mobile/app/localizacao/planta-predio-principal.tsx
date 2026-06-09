@@ -9,11 +9,11 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
-import { AppHeader } from "../../src/components/AppHeader";
-import { PlantaPredioPrincipalJS } from "../../src/components/PlantaPredioPrincipalJS";
-import { listarSalasPorPredio } from "../../src/services/localizacao";
-import { colors } from "../../src/theme/colors";
-
+import { AppHeader } from "@/components/AppHeader";
+import { PlantaPredioPrincipalJS } from "@/components/PlantaPredioPrincipalJS";
+import { listarSalasPorPredio } from "@/services/localizacao";
+import { colors } from "@/theme/colors";
+import { BackButton } from "@/components/BackButton";
 type Sala = {
   id: number;
   codigo_sala: string;
@@ -62,7 +62,9 @@ export default function PlantaPredioPrincipalScreen() {
         subtitle={`Prédio Principal • Piso ${pisoAtual}`}
         icon="apartment"
       />
-
+        <View style={{ paddingHorizontal: 20 }}>
+          <BackButton />
+        </View>
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />

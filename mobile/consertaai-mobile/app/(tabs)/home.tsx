@@ -39,7 +39,7 @@ export default function Home() {
             <MenuGridItem
               title="Meus Chamados"
               icon="assignment"
-              onPress={() => router.push("/(tabs)/chamados" as any)}
+              onPress={() => router.push("/chamados" as any)}
             />
 
             {user?.is_tecnico && (

@@ -3,9 +3,9 @@ import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from "
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 
-import { listarSalas } from "../../src/services/salas";
-import { AppHeader } from "../../src/components/AppHeader";
-import { colors } from "../../src/theme/colors";
+import { listarSalas } from "@/services/salas";
+import { AppHeader } from "@/components/AppHeader";
+import { colors } from "@/theme/colors";
 
 type Sala = {
   id: number;

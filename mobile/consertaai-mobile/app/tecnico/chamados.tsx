@@ -14,7 +14,7 @@ import { listarChamadosTecnico } from "@/services/tecnico";
 import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/colors";
 import { ChamadoTecnico } from "@/types/chamadoTecnico";
-
+import { BackButton } from "@/components/BackButton";
 type FiltroStatus = "TODOS" | "ABERTO" | "EM_ANDAMENTO" | "CONCLUIDO";
 
 export default function ChamadosTecnicoScreen() {
@@ -92,7 +92,9 @@ export default function ChamadosTecnicoScreen() {
         subtitle="Acompanhamento de manutenções"
         icon="engineering"
       />
-
+      <View style={{ paddingHorizontal: 20 }}>
+        <BackButton />
+      </View>
       <View style={styles.content}>
         <View style={styles.resumoGrid}>
           <ResumoCard

@@ -13,6 +13,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/colors";
 import { listarSalasPorPredio } from "@/services/localizacao";
 import { PlantaComplexoJS } from "@/components/PlantaComplexoJS";
+import { BackButton } from "@/components/BackButton";
 
 type Sala = {
   id: number;
@@ -58,7 +59,9 @@ export default function PlantaComplexoScreen() {
         subtitle="Arraste, aproxime e toque na sala"
         icon="map"
       />
-
+      <View style={{ paddingHorizontal: 20 }}>
+        <BackButton />
+      </View>
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />

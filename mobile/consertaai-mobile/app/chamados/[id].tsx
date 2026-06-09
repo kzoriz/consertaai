@@ -16,8 +16,8 @@ import {
   obterChamado,
   listarHistoricoChamado,
   atualizarChamadoTecnico,
-} from "../../src/services/chamados";
-import { useAuth } from "../../src/contexts/AuthContext";
+} from "@/services/chamados";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Chamado = {
   id: number;

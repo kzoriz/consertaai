@@ -20,7 +20,7 @@ import {
 import { colors } from "@/theme/colors";
 import { AppHeader } from "@/components/AppHeader";
 import { Equipamento } from "@/types/equipamentos";
-
+import { BackButton } from "@/components/BackButton";
 type Chamado = {
   id: number;
   usuario_id: number;
@@ -164,16 +164,13 @@ export default function EquipamentoDetalheScreen() {
         subtitle={equipamento.patrimonio}
         icon={tipoIcon(equipamento.tipo) as any}
       />
-
+      <View style={{ paddingHorizontal: 20 }}>
+        <BackButton />
+      </View>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={20} color={colors.primary} />
-          <Text style={styles.backText}>Voltar</Text>
-        </Pressable>
-
         <View style={styles.mainCard}>
           <View style={styles.equipamentoIcon}>
             <MaterialIcons

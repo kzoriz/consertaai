@@ -10,10 +10,10 @@ import {
 
 import { router, useLocalSearchParams } from "expo-router";
 
-import { listarBlocos } from "../../src/services/localizacao";
+import { listarBlocos } from "@/services/localizacao";
 
-import { AppHeader } from "../../src/components/AppHeader";
-import { colors } from "../../src/theme/colors";
+import { AppHeader } from "@/components/AppHeader";
+import { colors } from "@/theme/colors";
 import {LocationOptionCard} from "@/components/LocationOptionCard";
 
 export default function BlocosScreen() {
