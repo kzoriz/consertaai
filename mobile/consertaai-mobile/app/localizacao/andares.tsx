@@ -1,20 +1,12 @@
 import { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  ActivityIndicator,
-} from "react-native";
+import { View, FlatList, StyleSheet, ActivityIndicator } from "react-native";
 
 import { router, useLocalSearchParams } from "expo-router";
 
 import { listarAndares } from "@/services/localizacao";
-
 import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/colors";
-import {LocationOptionCard} from "@/components/LocationOptionCard";
+import { LocationOptionCard } from "@/components/LocationOptionCard";
 
 export default function AndaresScreen() {
   const { predio } = useLocalSearchParams();
@@ -28,6 +20,11 @@ export default function AndaresScreen() {
 
   async function carregar() {
     try {
+      if (String(predio) === "PREDIO_PRINCIPAL") {
+        setAndares(["Piso 1", "Piso 2"]);
+        return;
+      }
+
       const dados = await listarAndares(String(predio));
       setAndares(dados);
     } finally {
@@ -35,14 +32,20 @@ export default function AndaresScreen() {
     }
   }
 
+  function getSubtitle(andar: string) {
+    if (String(predio) === "PREDIO_PRINCIPAL") {
+      return andar === "Piso 1" ? "Salas 19 a 29" : "Salas 30 a 40";
+    }
+
+    return "Selecione este andar";
+  }
+
   return (
     <View style={styles.container}>
       <AppHeader
         title="Andares"
         subtitle={
-          predio === "PREDIO_PRINCIPAL"
-            ? "Prédio Principal"
-            : "Complexo"
+          predio === "PREDIO_PRINCIPAL" ? "Prédio Principal" : "Complexo"
         }
         icon="stairs"
       />
@@ -59,17 +62,28 @@ export default function AndaresScreen() {
           renderItem={({ item }) => (
             <LocationOptionCard
               title={item}
-              subtitle="Selecione este andar"
-              icon="stairs"
-              onPress={() =>
+              subtitle={getSubtitle(item)}
+              icon="layers"
+              onPress={() => {
+                if (String(predio) === "PREDIO_PRINCIPAL") {
+                  router.push({
+                    pathname: "/localizacao/planta-predio-principal",
+                    params: {
+                      piso: item.includes("2") ? "2" : "1",
+                    },
+                  });
+
+                  return;
+                }
+
                 router.push({
                   pathname: "/localizacao/blocos",
                   params: {
                     predio: String(predio),
                     andar: item,
                   },
-                })
-              }
+                });
+              }}
             />
           )}
         />
@@ -93,5 +107,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  
 });
