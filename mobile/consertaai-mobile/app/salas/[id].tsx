@@ -10,18 +10,29 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 
-import { listarEquipamentosDaSala } from "@/services/salas";
+import {
+  listarEquipamentosDaSala,
+  obterSala,
+} from "@/services/salas";
 import { AppHeader } from "@/components/AppHeader";
 import { SalaLayout } from "@/components/SalaLayout";
 import { colors } from "@/theme/colors";
 import { Equipamento } from "@/types/equipamentos";
 
+type Sala = {
+  id: number;
+  codigo_sala: string;
+  bloco: string;
+  andar: string;
+  descricao?: string;
+};
 
 export default function SalaDetalheScreen() {
   const { id } = useLocalSearchParams();
   const [equipamentoSelecionado, setEquipamentoSelecionado] = useState<Equipamento | null>(null);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sala, setSala] = useState<Sala | null>(null);
 
   useEffect(() => {
     carregar();
@@ -29,8 +40,11 @@ export default function SalaDetalheScreen() {
 
   async function carregar() {
     try {
-      const dados = await listarEquipamentosDaSala(String(id));
-      setEquipamentos(dados);
+      const salaData = await obterSala(String(id));
+      const equipamentosData = await listarEquipamentosDaSala(String(id));
+
+      setSala(salaData);
+      setEquipamentos(equipamentosData);
     } finally {
       setLoading(false);
     }
@@ -38,11 +52,11 @@ export default function SalaDetalheScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader
-        title="Layout da Sala"
-        subtitle="Toque no equipamento para detalhes"
-        icon="meeting-room"
-      />
+    <AppHeader
+      title={sala?.descricao || "Layout da Sala"}
+      subtitle={`${sala?.codigo_sala || ""} • ${sala?.bloco || ""} • ${sala?.andar || ""}`}
+      icon="meeting-room"
+    />
 
       <View style={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
