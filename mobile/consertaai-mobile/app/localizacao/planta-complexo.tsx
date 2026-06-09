@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   View,
   Text,
-  ImageBackground,
   Pressable,
   StyleSheet,
   ActivityIndicator,
@@ -12,7 +11,8 @@ import { router } from "expo-router";
 
 import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/colors";
-import { listarSalasPorLocal } from "@/services/localizacao";
+import { listarSalasPorPredio } from "@/services/localizacao";
+import { PlantaComplexoJS } from "@/components/PlantaComplexoJS";
 
 type Sala = {
   id: number;
@@ -20,10 +20,6 @@ type Sala = {
   bloco: string;
   andar: string;
   descricao?: string;
-  planta_x: number;
-  planta_y: number;
-  planta_largura: number;
-  planta_altura: number;
 };
 
 const MAP_WIDTH = 900;
@@ -40,12 +36,7 @@ export default function PlantaComplexoScreen() {
 
   async function carregar() {
     try {
-      const dados = await listarSalasPorLocal(
-        "COMPLEXO",
-        "Térreo",
-        "Complexo"
-      );
-
+      const dados = await listarSalasPorPredio("COMPLEXO");
       setSalas(dados);
     } finally {
       setLoading(false);
@@ -76,7 +67,9 @@ export default function PlantaComplexoScreen() {
       ) : (
         <>
           <View style={styles.toolbar}>
-            <Text style={styles.toolbarText}>Zoom: {Math.round(zoom * 100)}%</Text>
+            <Text style={styles.toolbarText}>
+              Zoom: {Math.round(zoom * 100)}%
+            </Text>
 
             <View style={styles.zoomButtons}>
               <Pressable style={styles.zoomButton} onPress={diminuirZoom}>
@@ -101,49 +94,23 @@ export default function PlantaComplexoScreen() {
                   {
                     width: MAP_WIDTH * zoom,
                     height: MAP_HEIGHT * zoom,
+                    transform: [{ scale: zoom }],
                   },
                 ]}
               >
-                <ImageBackground
-                  source={require("../../assets/images/planta-complexo.png")}
-                  style={styles.mapa}
-                  imageStyle={styles.mapaImagem}
-                  resizeMode="stretch"
-                >
-                  {salas.map((sala) => {
-                    const temCoordenada =
-                      sala.planta_largura > 0 && sala.planta_altura > 0;
-
-                    if (!temCoordenada) return null;
-
-                    return (
-                      <Pressable
-                        key={sala.id}
-                        style={[
-                          styles.salaBox,
-                          {
-                            left: `${sala.planta_x}%`,
-                            top: `${sala.planta_y}%`,
-                            width: `${sala.planta_largura}%`,
-                            height: `${sala.planta_altura}%`,
-                          },
-                        ]}
-                        onPress={() => router.push(`/salas/${sala.id}` as any)}
-                      >
-                        <Text style={styles.salaTexto}>
-                          {sala.codigo_sala}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </ImageBackground>
+                <PlantaComplexoJS
+                  salas={salas}
+                  onPressSala={(sala) =>
+                    router.push(`/salas/${sala.id}` as any)
+                  }
+                />
               </View>
             </ScrollView>
           </ScrollView>
 
           <View style={styles.legenda}>
             <Text style={styles.legendaText}>
-              Áreas azuis são salas cadastradas. Toque para abrir o layout interno.
+              Toque em uma sala azul para abrir o layout interno.
             </Text>
           </View>
         </>
@@ -207,36 +174,6 @@ const styles = StyleSheet.create({
 
   mapWrapper: {
     backgroundColor: colors.surface,
-  },
-
-  mapa: {
-    flex: 1,
-    position: "relative",
-  },
-
-  mapaImagem: {
-    width: "100%",
-    height: "100%",
-  },
-
-  salaBox: {
-    position: "absolute",
-    backgroundColor: "rgba(44, 64, 132, 0.28)",
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  salaTexto: {
-    color: colors.primary,
-    fontWeight: "900",
-    fontSize: 12,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 5,
   },
 
   legenda: {

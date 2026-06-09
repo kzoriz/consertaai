@@ -35,3 +35,11 @@ export async function listarSalasPorLocal(
 
   return response.data;
 }
+
+export async function listarSalasPorPredio(predio: string) {
+  const response = await api.get("/salas/por-predio", {
+    params: { predio },
+  });
+
+  return response.data;
+}

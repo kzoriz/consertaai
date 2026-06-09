@@ -100,6 +100,10 @@ class SalaSchema(Schema):
     codigo_sala: str
     bloco: str
     andar: str
+    planta_x: float
+    planta_y: float
+    planta_largura: float
+    planta_altura: float
     descricao: Optional[str] = None
 
 
@@ -116,6 +120,10 @@ class SalaResumoSchema(Schema):
     codigo_sala: str
     bloco: str
     andar: str
+    planta_x: float
+    planta_y: float
+    planta_largura: float
+    planta_altura: float
     descricao: Optional[str] = None
 
 
@@ -359,6 +367,12 @@ def listar_salas_por_local(request, predio: str, andar: str, bloco: str):
         andar=andar,
         bloco=bloco,
     ).order_by("codigo_sala")
+
+@api.get("/salas/por-predio", response=List[SalaSchema])
+def listar_salas_por_predio(request, predio: str):
+    return Sala.objects.filter(
+        predio=predio
+    ).order_by("andar", "bloco", "codigo_sala")
 
 @api.get("/salas/{sala_id}", response=SalaSchema)
 def obter_sala(request, sala_id: int):

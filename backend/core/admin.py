@@ -43,18 +43,13 @@ class SalaAdmin(admin.ModelAdmin):
         "predio",
         "andar",
         "bloco",
-        "descricao",
+        "planta_x",
+        "planta_y",
+        "planta_largura",
+        "planta_altura",
     )
-    list_filter = (
-        "predio",
-        "andar",
-        "bloco",
-    )
-    search_fields = (
-        "codigo_sala",
-        "descricao",
-        "bloco",
-    )
+    list_filter = ("predio", "andar", "bloco")
+    search_fields = ("codigo_sala", "descricao", "bloco")
 
 @admin.register(Chamado)
 class ChamadoAdmin(admin.ModelAdmin):
