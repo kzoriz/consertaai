@@ -261,6 +261,11 @@ class SalaStatusDashboardSchema(Schema):
     status: str
     chamados_abertos: int
     chamados_em_andamento: int
+    chamados_concluidos: int
+    equipamentos_total: int
+    equipamentos_operando: int
+    equipamentos_defeito: int
+    equipamentos_manutencao: int
 
 
 class DashboardAdminSchema(Schema):
@@ -776,6 +781,28 @@ def dashboard_admin(request):
             status_chamado="EM_ANDAMENTO"
         ).count()
 
+        concluidos_sala = chamados_sala.filter(
+            status_chamado="CONCLUIDO"
+        ).count()
+
+        equipamentos_sala = Equipamento.objects.filter(
+            sala=sala
+        )
+
+        equipamentos_total = equipamentos_sala.count()
+
+        equipamentos_operando = equipamentos_sala.filter(
+            status_atual="OPERANDO"
+        ).count()
+
+        equipamentos_defeito = equipamentos_sala.filter(
+            status_atual="DEFEITO"
+        ).count()
+
+        equipamentos_manutencao = equipamentos_sala.filter(
+            status_atual="MANUTENCAO"
+        ).count()
+
         if abertos_sala > 0:
             status = "ABERTO"
         elif andamento_sala > 0:
@@ -790,9 +817,17 @@ def dashboard_admin(request):
             "bloco": sala.bloco,
             "andar": sala.andar,
             "descricao": sala.descricao,
+
             "status": status,
+
             "chamados_abertos": abertos_sala,
             "chamados_em_andamento": andamento_sala,
+            "chamados_concluidos": concluidos_sala,
+
+            "equipamentos_total": equipamentos_total,
+            "equipamentos_operando": equipamentos_operando,
+            "equipamentos_defeito": equipamentos_defeito,
+            "equipamentos_manutencao": equipamentos_manutencao,
         })
 
     return 200, {

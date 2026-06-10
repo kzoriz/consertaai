@@ -8,6 +8,11 @@ export type SalaStatusDashboard = {
   status: "NORMAL" | "ABERTO" | "EM_ANDAMENTO";
   chamados_abertos: number;
   chamados_em_andamento: number;
+  chamados_concluidos: number;
+  equipamentos_total: number;
+  equipamentos_operando: number;
+  equipamentos_defeito: number;
+  equipamentos_manutencao: number;
 };
 
 export type DashboardAdmin = {

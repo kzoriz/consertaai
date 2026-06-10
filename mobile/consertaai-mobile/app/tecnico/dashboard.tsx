@@ -13,6 +13,9 @@ import { BackButton } from "@/components/BackButton";
 import { colors } from "@/theme/colors";
 import { obterDashboardAdmin } from "@/services/dashboard";
 import { DashboardAdmin } from "@/types/dashboard";
+import { PlantaComplexoDashboard } from "@/components/PlantaComplexoDashboard";
+import { SalaStatusModal } from "@/components/SalaStatusModal";
+import { SalaStatusDashboard } from "@/types/dashboard";
 
 export default function DashboardTecnicoScreen() {
   const [dashboard, setDashboard] = useState<DashboardAdmin | null>(null);
@@ -21,7 +24,10 @@ export default function DashboardTecnicoScreen() {
   useEffect(() => {
     carregar();
   }, []);
+const [salaSelecionada, setSalaSelecionada] =
+  useState<SalaStatusDashboard | null>(null);
 
+const [modalVisible, setModalVisible] = useState(false);
   async function carregar() {
     try {
       const dados = await obterDashboardAdmin();
@@ -117,8 +123,29 @@ export default function DashboardTecnicoScreen() {
             color={colors.warning}
           />
         </View>
+        <Text style={styles.sectionTitle}>
+          Planta Inteligente - Complexo
+        </Text>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator>
+          <PlantaComplexoDashboard
+            salas={dashboard.salas_status.filter(
+              (s) => s.predio === "COMPLEXO"
+            )}
+            onPressSala={(sala) => {
+              setSalaSelecionada(sala);
+              setModalVisible(true);
+            }}
+          />
+        </ScrollView>
       </ScrollView>
+            <SalaStatusModal
+        sala={salaSelecionada}
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
     </View>
+
   );
 }
 
@@ -138,7 +165,9 @@ function MetricCard({
       <MaterialIcons name={icon} size={28} color={color} />
       <Text style={styles.metricValue}>{value}</Text>
       <Text style={styles.metricLabel}>{label}</Text>
+
     </View>
+
   );
 }
 
