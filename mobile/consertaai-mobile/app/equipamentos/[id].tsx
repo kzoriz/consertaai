@@ -16,11 +16,22 @@ import {
   obterEquipamento,
   abrirChamado,
   listarChamadosDoEquipamento,
+  obterChamadoAtivoDoEquipamento,
 } from "@/services/equipamentos";
 import { colors } from "@/theme/colors";
 import { AppHeader } from "@/components/AppHeader";
 import { Equipamento } from "@/types/equipamentos";
 import { BackButton } from "@/components/BackButton";
+
+type ChamadoAtivo = {
+  id: number;
+  usuario_id: number;
+  equipamento_id: number;
+  descricao_problema: string;
+  prioridade: string;
+  status_chamado: string;
+};
+
 type Chamado = {
   id: number;
   usuario_id: number;
@@ -50,7 +61,7 @@ export default function EquipamentoDetalheScreen() {
   const [loading, setLoading] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [prioridade, setPrioridade] = useState("MEDIA");
-
+  const [chamadoAtivo, setChamadoAtivo] = useState<ChamadoAtivo | null>(null);
   useEffect(() => {
     carregarEquipamento();
   }, [id]);
@@ -62,6 +73,13 @@ export default function EquipamentoDetalheScreen() {
 
       setEquipamento(dados);
       setChamados(chamadosData);
+
+      try {
+        const chamadoAtivoData = await obterChamadoAtivoDoEquipamento(String(id));
+        setChamadoAtivo(chamadoAtivoData);
+      } catch {
+        setChamadoAtivo(null);
+      }
     } catch {
       Alert.alert("Erro", "Não foi possível carregar o equipamento.");
     } finally {
@@ -278,8 +296,48 @@ export default function EquipamentoDetalheScreen() {
     ))
   )}
 </View>
-        <Text style={styles.sectionTitle}>Abrir chamado</Text>
+        {chamadoAtivo && (
+  <>
+    <Text style={styles.sectionTitle}>Chamado ativo</Text>
 
+    <View style={styles.activeCallCard}>
+      <View style={styles.activeCallHeader}>
+        <View>
+          <Text style={styles.activeCallTitle}>
+            Chamado #{chamadoAtivo.id}
+          </Text>
+
+          <Text style={styles.activeCallDescription}>
+            {chamadoAtivo.descricao_problema}
+          </Text>
+        </View>
+
+        <Text
+          style={[
+            styles.activeStatusBadge,
+            chamadoAtivo.status_chamado === "ABERTO"
+              ? styles.activeStatusAberto
+              : styles.activeStatusAndamento,
+          ]}
+        >
+          {chamadoAtivo.status_chamado === "ABERTO"
+            ? "Aberto"
+            : "Em andamento"}
+        </Text>
+      </View>
+
+      <Pressable
+        style={styles.viewCallButton}
+        onPress={() => router.push(`/chamados/${chamadoAtivo.id}` as any)}
+      >
+        <Text style={styles.viewCallButtonText}>Ver chamado atual</Text>
+      </Pressable>
+    </View>
+  </>
+)}
+{!chamadoAtivo && (
+  <>
+        <Text style={styles.sectionTitle}>Abrir chamado</Text>
         <View style={styles.chamadoCard}>
           <Text style={styles.label}>Qual problema foi encontrado?</Text>
 
@@ -384,6 +442,9 @@ export default function EquipamentoDetalheScreen() {
             </Text>
           </Pressable>
         </View>
+
+  </>
+)}
       </ScrollView>
     </View>
   );
@@ -683,5 +744,65 @@ priorityText: {
 
 priorityTextActive: {
   color: "#fff",
+},
+  activeCallCard: {
+  backgroundColor: colors.surface,
+  borderRadius: 20,
+  padding: 16,
+  borderWidth: 1,
+  borderColor: colors.border,
+  marginBottom: 22,
+},
+
+activeCallHeader: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  gap: 12,
+},
+
+activeCallTitle: {
+  fontSize: 18,
+  fontWeight: "900",
+  color: colors.text,
+},
+
+activeCallDescription: {
+  color: colors.muted,
+  fontWeight: "700",
+  marginTop: 6,
+  maxWidth: 220,
+},
+
+activeStatusBadge: {
+  alignSelf: "flex-start",
+  paddingHorizontal: 10,
+  paddingVertical: 6,
+  borderRadius: 999,
+  fontWeight: "900",
+  fontSize: 12,
+  overflow: "hidden",
+},
+
+activeStatusAberto: {
+  backgroundColor: "#FDECEC",
+  color: colors.danger,
+},
+
+activeStatusAndamento: {
+  backgroundColor: "#FFF4E5",
+  color: colors.warning,
+},
+
+viewCallButton: {
+  backgroundColor: colors.secondary,
+  padding: 14,
+  borderRadius: 14,
+  marginTop: 16,
+},
+
+viewCallButtonText: {
+  textAlign: "center",
+  color: colors.text,
+  fontWeight: "900",
 },
 });

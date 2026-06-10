@@ -759,6 +759,27 @@ def chamados_do_equipamento(request, equipamento_id: int):
     return equipamento.chamados.all().order_by("-data_hora_abertura")
 
 @api.get(
+    "/equipamentos/{equipamento_id}/chamado-ativo",
+    response={200: ChamadoSchema, 404: dict},
+    auth=jwt_auth,
+)
+def chamado_ativo_do_equipamento(request, equipamento_id: int):
+    chamado = (
+        Chamado.objects
+        .filter(
+            equipamento_id=equipamento_id,
+            status_chamado__in=["ABERTO", "EM_ANDAMENTO"],
+        )
+        .order_by("-data_hora_abertura")
+        .first()
+    )
+
+    if not chamado:
+        return 404, {"erro": "Nenhum chamado ativo para este equipamento."}
+
+    return 200, chamado
+
+@api.get(
     "/admin/dashboard",
     response={200: DashboardAdminSchema, 403: dict},
     auth=jwt_auth,

@@ -25,3 +25,13 @@ export async function listarChamadosDoEquipamento(
   const response = await api.get(`/equipamentos/${equipamentoId}/chamados`);
   return response.data;
 }
+
+export async function obterChamadoAtivoDoEquipamento(
+  equipamentoId: string | number
+) {
+  const response = await api.get(
+    `/equipamentos/${equipamentoId}/chamado-ativo`
+  );
+
+  return response.data;
+}
