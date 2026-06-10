@@ -16,7 +16,7 @@ import { DashboardAdmin } from "@/types/dashboard";
 import { PlantaComplexoDashboard } from "@/components/PlantaComplexoDashboard";
 import { SalaStatusModal } from "@/components/SalaStatusModal";
 import { SalaStatusDashboard } from "@/types/dashboard";
-
+import { PlantaPredioPrincipalDashboard } from "@/components/PlantaPredioPrincipalDashboard";
 export default function DashboardTecnicoScreen() {
   const [dashboard, setDashboard] = useState<DashboardAdmin | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,21 +123,60 @@ const [modalVisible, setModalVisible] = useState(false);
             color={colors.warning}
           />
         </View>
-        <Text style={styles.sectionTitle}>
-          Planta Inteligente - Complexo
-        </Text>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator>
-          <PlantaComplexoDashboard
-            salas={dashboard.salas_status.filter(
-              (s) => s.predio === "COMPLEXO"
-            )}
-            onPressSala={(sala) => {
-              setSalaSelecionada(sala);
-              setModalVisible(true);
-            }}
-          />
-        </ScrollView>
+  <Text style={styles.sectionTitle}>
+  Planta Inteligente - Complexo
+</Text>
+
+<ScrollView horizontal showsHorizontalScrollIndicator>
+  <PlantaComplexoDashboard
+    salas={dashboard.salas_status.filter(
+      (s) => s.predio === "COMPLEXO"
+    )}
+    onPressSala={(sala) => {
+      setSalaSelecionada(sala);
+      setModalVisible(true);
+    }}
+  />
+</ScrollView>
+
+<Text style={styles.sectionTitle}>
+  Planta Inteligente - Prédio Principal - Piso 1
+</Text>
+
+<ScrollView horizontal showsHorizontalScrollIndicator>
+  <PlantaPredioPrincipalDashboard
+    piso="1"
+    salas={dashboard.salas_status.filter(
+      (s) =>
+        s.predio === "PREDIO_PRINCIPAL" &&
+        s.andar === "Piso 1"
+    )}
+    onPressSala={(sala) => {
+      setSalaSelecionada(sala);
+      setModalVisible(true);
+    }}
+  />
+</ScrollView>
+
+<Text style={styles.sectionTitle}>
+  Planta Inteligente - Prédio Principal - Piso 2
+</Text>
+
+<ScrollView horizontal showsHorizontalScrollIndicator>
+  <PlantaPredioPrincipalDashboard
+    piso="2"
+    salas={dashboard.salas_status.filter(
+      (s) =>
+        s.predio === "PREDIO_PRINCIPAL" &&
+        s.andar === "Piso 2"
+    )}
+    onPressSala={(sala) => {
+      setSalaSelecionada(sala);
+      setModalVisible(true);
+    }}
+  />
+</ScrollView>
       </ScrollView>
             <SalaStatusModal
         sala={salaSelecionada}
