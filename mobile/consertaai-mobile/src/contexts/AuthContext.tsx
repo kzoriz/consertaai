@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import api from "../services/api";
 
-const isWeb = typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+const isWeb =
+  typeof window !== "undefined" &&
+  typeof window.localStorage !== "undefined";
 
 const storage = {
   async getItem(key: string) {
@@ -41,6 +43,7 @@ type User = {
   first_name: string;
   is_staff: boolean;
   is_tecnico: boolean;
+  pode_definir_prioridade: boolean;
 };
 
 type AuthContextData = {
@@ -52,18 +55,16 @@ type AuthContextData = {
     username: string,
     email: string,
     password: string,
-    first_name: string
+    first_name: string,
+    tipo_usuario: string,
+    codigo_acesso: string
   ) => Promise<void>;
   logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
-export function AuthProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -117,13 +118,17 @@ export function AuthProvider({
     username: string,
     email: string,
     password: string,
-    first_name: string
+    first_name: string,
+    tipo_usuario: string = "COMUM",
+    codigo_acesso: string = ""
   ) {
     const response = await api.post("/auth/cadastro", {
       username,
       email,
       password,
       first_name,
+      tipo_usuario,
+      codigo_acesso,
     });
 
     const { access, refresh } = response.data;

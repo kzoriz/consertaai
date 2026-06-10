@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.shortcuts import get_object_or_404
 
 from ninja import NinjaAPI, Schema
@@ -21,6 +21,9 @@ from .models import (
 
 
 api = NinjaAPI(title="Conserta Aí API")
+
+CODIGO_SERVIDOR = "UERN26"
+CODIGO_TECNICO = "UERNT2026"
 
 def calcular_distancia_metros(lat1, lon1, lat2, lon2):
     raio_terra = 6371000
@@ -71,6 +74,8 @@ class CadastroSchema(Schema):
     email: str
     password: str
     first_name: str = ""
+    tipo_usuario: str = "COMUM"  # COMUM, SERVIDOR, TECNICO
+    codigo_acesso: Optional[str] = None
 
 
 class LoginSchema(Schema):
@@ -92,6 +97,7 @@ class UsuarioSchema(Schema):
     first_name: str
     is_staff: bool
     is_tecnico: bool
+    pode_definir_prioridade: bool
 
 
 class SalaSchema(Schema):
@@ -279,18 +285,37 @@ class DashboardAdminSchema(Schema):
     salas_status: List[SalaStatusDashboardSchema]
 
 
-
+def usuario_pode_definir_prioridade(user):
+    return (
+        user.is_staff
+        or user.groups.filter(name__in=["Servidor", "Tecnico"]).exists()
+    )
 # =========================
 # LOGIN / CADASTRO
 # =========================
 
 @api.post("/auth/cadastro", response={201: TokenSchema, 400: dict})
 def cadastrar_usuario(request, payload: CadastroSchema):
+    tipo_usuario = payload.tipo_usuario.upper()
+
+    tipos_validos = ["COMUM", "SERVIDOR", "TECNICO"]
+
+    if tipo_usuario not in tipos_validos:
+        return 400, {"erro": "Tipo de usuário inválido."}
+
     if User.objects.filter(username=payload.username).exists():
         return 400, {"erro": "Nome de usuário já existe."}
 
     if User.objects.filter(email=payload.email).exists():
         return 400, {"erro": "E-mail já cadastrado."}
+
+    if tipo_usuario == "SERVIDOR":
+        if payload.codigo_acesso != CODIGO_SERVIDOR:
+            return 400, {"erro": "Código de servidor inválido."}
+
+    if tipo_usuario == "TECNICO":
+        if payload.codigo_acesso != CODIGO_TECNICO:
+            return 400, {"erro": "Código de técnico inválido."}
 
     user = User.objects.create_user(
         username=payload.username,
@@ -298,6 +323,14 @@ def cadastrar_usuario(request, payload: CadastroSchema):
         password=payload.password,
         first_name=payload.first_name,
     )
+
+    if tipo_usuario == "SERVIDOR":
+        grupo, _ = Group.objects.get_or_create(name="Servidor")
+        user.groups.add(grupo)
+
+    elif tipo_usuario == "TECNICO":
+        grupo, _ = Group.objects.get_or_create(name="Tecnico")
+        user.groups.add(grupo)
 
     refresh = RefreshToken.for_user(user)
 
@@ -340,6 +373,7 @@ def meu_perfil(request):
         "first_name": user.first_name,
         "is_staff": user.is_staff,
         "is_tecnico": usuario_eh_tecnico(user),
+        "pode_definir_prioridade": usuario_pode_definir_prioridade(user),
     }
 
 
@@ -481,11 +515,16 @@ def criar_chamado(request, payload: ChamadoCreateSchema):
             "status_chamado": chamado_ativo.status_chamado,
         }
 
+    prioridade = "MEDIA"
+
+    if usuario_pode_definir_prioridade(request.auth):
+        prioridade = payload.prioridade
+
     chamado = Chamado.objects.create(
         usuario=request.auth,
         equipamento_id=payload.equipamento_id,
         descricao_problema=payload.descricao_problema,
-        prioridade=payload.prioridade,
+        prioridade=prioridade,
     )
 
     chamado.equipamento.status_atual = "DEFEITO"

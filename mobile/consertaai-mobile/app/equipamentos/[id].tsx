@@ -18,10 +18,11 @@ import {
   listarChamadosDoEquipamento,
   obterChamadoAtivoDoEquipamento,
 } from "@/services/equipamentos";
+import { useAuth } from "@/contexts/AuthContext";
 import { colors } from "@/theme/colors";
 import { AppHeader } from "@/components/AppHeader";
-import { Equipamento } from "@/types/equipamentos";
 import { BackButton } from "@/components/BackButton";
+import { Equipamento } from "@/types/equipamentos";
 
 type ChamadoAtivo = {
   id: number;
@@ -53,6 +54,7 @@ const problemasPorTipo = {
 
 export default function EquipamentoDetalheScreen() {
   const { id } = useLocalSearchParams();
+  const { user } = useAuth();
 
   const [equipamento, setEquipamento] = useState<Equipamento | null>(null);
   const [chamados, setChamados] = useState<Chamado[]>([]);
@@ -62,6 +64,7 @@ export default function EquipamentoDetalheScreen() {
   const [enviando, setEnviando] = useState(false);
   const [prioridade, setPrioridade] = useState("MEDIA");
   const [chamadoAtivo, setChamadoAtivo] = useState<ChamadoAtivo | null>(null);
+
   useEffect(() => {
     carregarEquipamento();
   }, [id]);
@@ -75,7 +78,9 @@ export default function EquipamentoDetalheScreen() {
       setChamados(chamadosData);
 
       try {
-        const chamadoAtivoData = await obterChamadoAtivoDoEquipamento(String(id));
+        const chamadoAtivoData = await obterChamadoAtivoDoEquipamento(
+          String(id)
+        );
         setChamadoAtivo(chamadoAtivoData);
       } catch {
         setChamadoAtivo(null);
@@ -106,9 +111,14 @@ export default function EquipamentoDetalheScreen() {
           ? descricao
           : `${problemaSelecionado}${descricao ? ` - ${descricao}` : ""}`;
 
-      await abrirChamado(String(id), textoChamado, prioridade);
+      await abrirChamado(
+        String(id),
+        textoChamado,
+        user?.pode_definir_prioridade ? prioridade : "MEDIA"
+      );
 
       Alert.alert("Sucesso", "Chamado aberto com sucesso.");
+
       setPrioridade("MEDIA");
       setProblemaSelecionado("");
       setDescricao("");
@@ -116,8 +126,7 @@ export default function EquipamentoDetalheScreen() {
       await carregarEquipamento();
     } catch (error: any) {
       const mensagem =
-        error?.response?.data?.erro ||
-        "Não foi possível abrir o chamado.";
+        error?.response?.data?.erro || "Não foi possível abrir o chamado.";
 
       Alert.alert("Atenção", mensagem);
     } finally {
@@ -186,9 +195,11 @@ export default function EquipamentoDetalheScreen() {
         subtitle={equipamento.patrimonio}
         icon={tipoIcon(equipamento.tipo) as any}
       />
-      <View style={{ paddingHorizontal: 20 }}>
+
+      <View style={styles.backWrapper}>
         <BackButton />
       </View>
+
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -222,6 +233,7 @@ export default function EquipamentoDetalheScreen() {
                 { backgroundColor: statusColor(equipamento.status_atual) },
               ]}
             />
+
             <Text
               style={[
                 styles.statusText,
@@ -262,189 +274,207 @@ export default function EquipamentoDetalheScreen() {
             icon="info"
           />
         </View>
+
         <Text style={styles.sectionTitle}>Histórico do equipamento</Text>
 
-<View style={styles.infoCard}>
-  {chamados.length === 0 ? (
-    <Text style={styles.emptyText}>
-      Nenhum chamado registrado para este equipamento.
-    </Text>
-  ) : (
-    chamados.slice(0, 3).map((chamado) => (
-      <Pressable
-        key={chamado.id}
-        style={styles.chamadoResumo}
-        onPress={() => router.push(`/chamados/${chamado.id}` as any)}
-      >
-        <View>
-          <Text style={styles.chamadoTitulo}>Chamado #{chamado.id}</Text>
-          <Text style={styles.chamadoDescricao}>
-            {chamado.descricao_problema}
-          </Text>
-        </View>
-
-        <Text style={styles.chamadoStatus}>
-          {chamado.status_chamado === "ABERTO"
-            ? "Aberto"
-            : chamado.status_chamado === "EM_ANDAMENTO"
-            ? "Em andamento"
-            : chamado.status_chamado === "CONCLUIDO"
-            ? "Concluído"
-            : "Cancelado"}
-        </Text>
-      </Pressable>
-    ))
-  )}
-</View>
-        {chamadoAtivo && (
-  <>
-    <Text style={styles.sectionTitle}>Chamado ativo</Text>
-
-    <View style={styles.activeCallCard}>
-      <View style={styles.activeCallHeader}>
-        <View>
-          <Text style={styles.activeCallTitle}>
-            Chamado #{chamadoAtivo.id}
-          </Text>
-
-          <Text style={styles.activeCallDescription}>
-            {chamadoAtivo.descricao_problema}
-          </Text>
-        </View>
-
-        <Text
-          style={[
-            styles.activeStatusBadge,
-            chamadoAtivo.status_chamado === "ABERTO"
-              ? styles.activeStatusAberto
-              : styles.activeStatusAndamento,
-          ]}
-        >
-          {chamadoAtivo.status_chamado === "ABERTO"
-            ? "Aberto"
-            : "Em andamento"}
-        </Text>
-      </View>
-
-      <Pressable
-        style={styles.viewCallButton}
-        onPress={() => router.push(`/chamados/${chamadoAtivo.id}` as any)}
-      >
-        <Text style={styles.viewCallButtonText}>Ver chamado atual</Text>
-      </Pressable>
-    </View>
-  </>
-)}
-{!chamadoAtivo && (
-  <>
-        <Text style={styles.sectionTitle}>Abrir chamado</Text>
-        <View style={styles.chamadoCard}>
-          <Text style={styles.label}>Qual problema foi encontrado?</Text>
-
-          <View style={styles.problemGrid}>
-            {problemas.map((problema) => (
+        <View style={styles.infoCard}>
+          {chamados.length === 0 ? (
+            <Text style={styles.emptyText}>
+              Nenhum chamado registrado para este equipamento.
+            </Text>
+          ) : (
+            chamados.slice(0, 3).map((chamado) => (
               <Pressable
-                key={problema}
-                style={[
-                  styles.problemChip,
-                  problemaSelecionado === problema && styles.problemChipActive,
-                ]}
-                onPress={() => setProblemaSelecionado(problema)}
+                key={chamado.id}
+                style={styles.chamadoResumo}
+                onPress={() => router.push(`/chamados/${chamado.id}` as any)}
               >
-                <Text
-                  style={[
-                    styles.problemChipText,
-                    problemaSelecionado === problema &&
-                      styles.problemChipTextActive,
-                  ]}
-                >
-                  {problema}
+                <View style={styles.chamadoContent}>
+                  <Text style={styles.chamadoTitulo}>
+                    Chamado #{chamado.id}
+                  </Text>
+                  <Text style={styles.chamadoDescricao}>
+                    {chamado.descricao_problema}
+                  </Text>
+                </View>
+
+                <Text style={styles.chamadoStatus}>
+                  {chamado.status_chamado === "ABERTO"
+                    ? "Aberto"
+                    : chamado.status_chamado === "EM_ANDAMENTO"
+                    ? "Em andamento"
+                    : chamado.status_chamado === "CONCLUIDO"
+                    ? "Concluído"
+                    : "Cancelado"}
                 </Text>
               </Pressable>
-            ))}
-          </View>
-
-          <TextInput
-            style={styles.textarea}
-            placeholder={
-              problemaSelecionado === "Outro"
-                ? "Descreva o problema..."
-                : "Observação complementar, se necessário..."
-            }
-            value={descricao}
-            onChangeText={setDescricao}
-            multiline
-            numberOfLines={5}
-            textAlignVertical="top"
-          />
-          <Text style={styles.label}>Prioridade</Text>
-
-<View style={styles.priorityGrid}>
-  <Pressable
-    style={[
-      styles.priorityChip,
-      prioridade === "BAIXA" && styles.priorityBaixaActive,
-    ]}
-    onPress={() => setPrioridade("BAIXA")}
-  >
-    <Text
-      style={[
-        styles.priorityText,
-        prioridade === "BAIXA" && styles.priorityTextActive,
-      ]}
-    >
-      Baixa
-    </Text>
-  </Pressable>
-
-  <Pressable
-    style={[
-      styles.priorityChip,
-      prioridade === "MEDIA" && styles.priorityMediaActive,
-    ]}
-    onPress={() => setPrioridade("MEDIA")}
-  >
-    <Text
-      style={[
-        styles.priorityText,
-        prioridade === "MEDIA" && styles.priorityTextActive,
-      ]}
-    >
-      Média
-    </Text>
-  </Pressable>
-
-  <Pressable
-    style={[
-      styles.priorityChip,
-      prioridade === "ALTA" && styles.priorityAltaActive,
-    ]}
-    onPress={() => setPrioridade("ALTA")}
-  >
-    <Text
-      style={[
-        styles.priorityText,
-        prioridade === "ALTA" && styles.priorityTextActive,
-      ]}
-    >
-      Alta
-    </Text>
-  </Pressable>
-</View>
-          <Pressable
-            style={[styles.openButton, enviando && styles.disabledButton]}
-            onPress={handleAbrirChamado}
-            disabled={enviando}
-          >
-            <MaterialIcons name="add-task" size={22} color={colors.text} />
-            <Text style={styles.openButtonText}>
-              {enviando ? "Enviando..." : "Abrir chamado"}
-            </Text>
-          </Pressable>
+            ))
+          )}
         </View>
 
-  </>
-)}
+        {chamadoAtivo && (
+          <>
+            <Text style={styles.sectionTitle}>Chamado ativo</Text>
+
+            <View style={styles.activeCallCard}>
+              <View style={styles.activeCallHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.activeCallTitle}>
+                    Chamado #{chamadoAtivo.id}
+                  </Text>
+
+                  <Text style={styles.activeCallDescription}>
+                    {chamadoAtivo.descricao_problema}
+                  </Text>
+                </View>
+
+                <Text
+                  style={[
+                    styles.activeStatusBadge,
+                    chamadoAtivo.status_chamado === "ABERTO"
+                      ? styles.activeStatusAberto
+                      : styles.activeStatusAndamento,
+                  ]}
+                >
+                  {chamadoAtivo.status_chamado === "ABERTO"
+                    ? "Aberto"
+                    : "Em andamento"}
+                </Text>
+              </View>
+
+              <Pressable
+                style={styles.viewCallButton}
+                onPress={() =>
+                  router.push(`/chamados/${chamadoAtivo.id}` as any)
+                }
+              >
+                <Text style={styles.viewCallButtonText}>
+                  Ver chamado atual
+                </Text>
+              </Pressable>
+            </View>
+          </>
+        )}
+
+        {!chamadoAtivo && (
+          <>
+            <Text style={styles.sectionTitle}>Abrir chamado</Text>
+
+            <View style={styles.chamadoCard}>
+              <Text style={styles.label}>Qual problema foi encontrado?</Text>
+
+              <View style={styles.problemGrid}>
+                {problemas.map((problema) => (
+                  <Pressable
+                    key={problema}
+                    style={[
+                      styles.problemChip,
+                      problemaSelecionado === problema &&
+                        styles.problemChipActive,
+                    ]}
+                    onPress={() => setProblemaSelecionado(problema)}
+                  >
+                    <Text
+                      style={[
+                        styles.problemChipText,
+                        problemaSelecionado === problema &&
+                          styles.problemChipTextActive,
+                      ]}
+                    >
+                      {problema}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <TextInput
+                style={styles.textarea}
+                placeholder={
+                  problemaSelecionado === "Outro"
+                    ? "Descreva o problema..."
+                    : "Observação complementar, se necessário..."
+                }
+                value={descricao}
+                onChangeText={setDescricao}
+                multiline
+                numberOfLines={5}
+                textAlignVertical="top"
+              />
+
+              {user?.pode_definir_prioridade && (
+                <>
+                  <Text style={styles.label}>Prioridade</Text>
+
+                  <View style={styles.priorityGrid}>
+                    <Pressable
+                      style={[
+                        styles.priorityChip,
+                        prioridade === "BAIXA" && styles.priorityBaixaActive,
+                      ]}
+                      onPress={() => setPrioridade("BAIXA")}
+                    >
+                      <Text
+                        style={[
+                          styles.priorityText,
+                          prioridade === "BAIXA" &&
+                            styles.priorityTextActive,
+                        ]}
+                      >
+                        Baixa
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={[
+                        styles.priorityChip,
+                        prioridade === "MEDIA" && styles.priorityMediaActive,
+                      ]}
+                      onPress={() => setPrioridade("MEDIA")}
+                    >
+                      <Text
+                        style={[
+                          styles.priorityText,
+                          prioridade === "MEDIA" &&
+                            styles.priorityTextActive,
+                        ]}
+                      >
+                        Média
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={[
+                        styles.priorityChip,
+                        prioridade === "ALTA" && styles.priorityAltaActive,
+                      ]}
+                      onPress={() => setPrioridade("ALTA")}
+                    >
+                      <Text
+                        style={[
+                          styles.priorityText,
+                          prioridade === "ALTA" && styles.priorityTextActive,
+                        ]}
+                      >
+                        Alta
+                      </Text>
+                    </Pressable>
+                  </View>
+                </>
+              )}
+
+              <Pressable
+                style={[styles.openButton, enviando && styles.disabledButton]}
+                onPress={handleAbrirChamado}
+                disabled={enviando}
+              >
+                <MaterialIcons name="add-task" size={22} color={colors.text} />
+                <Text style={styles.openButtonText}>
+                  {enviando ? "Enviando..." : "Abrir chamado"}
+                </Text>
+              </Pressable>
+            </View>
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -479,6 +509,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 
+  backWrapper: {
+    paddingHorizontal: 20,
+  },
+
   content: {
     padding: 20,
     paddingBottom: 40,
@@ -490,18 +524,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     backgroundColor: colors.background,
-  },
-
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 16,
-  },
-
-  backText: {
-    color: colors.primary,
-    fontWeight: "800",
   },
 
   mainCard: {
@@ -602,6 +624,100 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  emptyText: {
+    color: colors.muted,
+    fontWeight: "600",
+  },
+
+  chamadoResumo: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+
+  chamadoContent: {
+    flex: 1,
+  },
+
+  chamadoTitulo: {
+    fontWeight: "900",
+    color: colors.text,
+  },
+
+  chamadoDescricao: {
+    color: colors.muted,
+    marginTop: 4,
+  },
+
+  chamadoStatus: {
+    fontWeight: "900",
+    color: colors.primary,
+    fontSize: 12,
+  },
+
+  activeCallCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 22,
+  },
+
+  activeCallHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  activeCallTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: colors.text,
+  },
+
+  activeCallDescription: {
+    color: colors.muted,
+    fontWeight: "700",
+    marginTop: 6,
+  },
+
+  activeStatusBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    fontWeight: "900",
+    fontSize: 12,
+    overflow: "hidden",
+  },
+
+  activeStatusAberto: {
+    backgroundColor: "#FDECEC",
+    color: colors.danger,
+  },
+
+  activeStatusAndamento: {
+    backgroundColor: "#FFF4E5",
+    color: colors.warning,
+  },
+
+  viewCallButton: {
+    backgroundColor: colors.secondary,
+    padding: 14,
+    borderRadius: 14,
+    marginTop: 16,
+  },
+
+  viewCallButtonText: {
+    textAlign: "center",
+    color: colors.text,
+    fontWeight: "900",
+  },
+
   chamadoCard: {
     backgroundColor: colors.surface,
     borderRadius: 20,
@@ -657,6 +773,46 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
+  priorityGrid: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 14,
+  },
+
+  priorityChip: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 999,
+    paddingVertical: 10,
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+
+  priorityBaixaActive: {
+    backgroundColor: colors.success,
+    borderColor: colors.success,
+  },
+
+  priorityMediaActive: {
+    backgroundColor: colors.warning,
+    borderColor: colors.warning,
+  },
+
+  priorityAltaActive: {
+    backgroundColor: colors.danger,
+    borderColor: colors.danger,
+  },
+
+  priorityText: {
+    fontWeight: "900",
+    color: colors.text,
+  },
+
+  priorityTextActive: {
+    color: "#fff",
+  },
+
   openButton: {
     backgroundColor: colors.secondary,
     borderRadius: 14,
@@ -676,133 +832,4 @@ const styles = StyleSheet.create({
   disabledButton: {
     opacity: 0.6,
   },
-  emptyText: {
-  color: colors.muted,
-  fontWeight: "600",
-},
-
-chamadoResumo: {
-  paddingVertical: 12,
-  borderBottomWidth: 1,
-  borderBottomColor: colors.border,
-  flexDirection: "row",
-  justifyContent: "space-between",
-  gap: 10,
-},
-
-chamadoTitulo: {
-  fontWeight: "900",
-  color: colors.text,
-},
-
-chamadoDescricao: {
-  color: colors.muted,
-  marginTop: 4,
-  maxWidth: 210,
-},
-
-chamadoStatus: {
-  fontWeight: "900",
-  color: colors.primary,
-  fontSize: 12,
-},
-  priorityGrid: {
-  flexDirection: "row",
-  gap: 10,
-  marginBottom: 14,
-},
-
-priorityChip: {
-  flex: 1,
-  borderWidth: 1,
-  borderColor: colors.border,
-  borderRadius: 999,
-  paddingVertical: 10,
-  alignItems: "center",
-  backgroundColor: "#fff",
-},
-
-priorityBaixaActive: {
-  backgroundColor: colors.success,
-  borderColor: colors.success,
-},
-
-priorityMediaActive: {
-  backgroundColor: colors.warning,
-  borderColor: colors.warning,
-},
-
-priorityAltaActive: {
-  backgroundColor: colors.danger,
-  borderColor: colors.danger,
-},
-
-priorityText: {
-  fontWeight: "900",
-  color: colors.text,
-},
-
-priorityTextActive: {
-  color: "#fff",
-},
-  activeCallCard: {
-  backgroundColor: colors.surface,
-  borderRadius: 20,
-  padding: 16,
-  borderWidth: 1,
-  borderColor: colors.border,
-  marginBottom: 22,
-},
-
-activeCallHeader: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  gap: 12,
-},
-
-activeCallTitle: {
-  fontSize: 18,
-  fontWeight: "900",
-  color: colors.text,
-},
-
-activeCallDescription: {
-  color: colors.muted,
-  fontWeight: "700",
-  marginTop: 6,
-  maxWidth: 220,
-},
-
-activeStatusBadge: {
-  alignSelf: "flex-start",
-  paddingHorizontal: 10,
-  paddingVertical: 6,
-  borderRadius: 999,
-  fontWeight: "900",
-  fontSize: 12,
-  overflow: "hidden",
-},
-
-activeStatusAberto: {
-  backgroundColor: "#FDECEC",
-  color: colors.danger,
-},
-
-activeStatusAndamento: {
-  backgroundColor: "#FFF4E5",
-  color: colors.warning,
-},
-
-viewCallButton: {
-  backgroundColor: colors.secondary,
-  padding: 14,
-  borderRadius: 14,
-  marginTop: 16,
-},
-
-viewCallButtonText: {
-  textAlign: "center",
-  color: colors.text,
-  fontWeight: "900",
-},
 });
