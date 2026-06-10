@@ -1,56 +1,211 @@
-# Welcome to your Expo app 👋
+# Conserta Aí
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Sistema de gestão de manutenção predial desenvolvido para a Universidade do Estado do Rio Grande do Norte (UERN), permitindo que alunos, servidores e técnicos registrem, acompanhem e gerenciem ocorrências em equipamentos e ambientes da instituição.
 
-## Get started
+## Objetivo
 
-1. Install dependencies
+O Conserta Aí tem como objetivo facilitar a comunicação entre a comunidade acadêmica e a equipe de manutenção, permitindo a abertura e acompanhamento de chamados para equipamentos como luminárias e aparelhos de ar-condicionado, além da visualização da localização física dos ambientes através de plantas interativas dos prédios.
 
-   ```bash
-   npm install
-   ```
+## Funcionalidades
 
-2. Start the app
+### Usuários
 
-   ```bash
-   npx expo start
-   ```
+* Cadastro de usuários
+* Login e autenticação JWT
+* Perfis diferenciados:
 
-In the output, you'll find options to open the app in a
+  * Usuário Comum
+  * Servidor
+  * Técnico
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Chamados
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+* Abertura de chamados
+* Bloqueio de chamados duplicados para o mesmo equipamento
+* Acompanhamento do status dos chamados
+* Histórico de chamados por equipamento
+* Controle de prioridades
 
-## Get a fresh project
+### Controle de Prioridade
 
-When you're ready, run:
+Usuários comuns não podem definir prioridades.
 
-```bash
-npm run reset-project
+Prioridades podem ser definidas apenas por:
+
+* Servidores
+* Técnicos
+
+Quando um usuário comum abre um chamado, a prioridade é automaticamente definida como **Média**.
+
+### Equipamentos
+
+Atualmente o sistema gerencia:
+
+* Luminárias
+* Ar-condicionados
+
+Cada equipamento possui:
+
+* Patrimônio
+* Status operacional
+* Histórico de manutenção
+* Localização física
+
+### Localização Inteligente
+
+Visualização dos ambientes através de plantas interativas:
+
+#### Complexo Cultural
+
+* Planta navegável
+* Seleção visual das salas
+* Consulta dos equipamentos presentes
+
+#### Prédio Principal
+
+* Piso 1
+* Piso 2
+
+### Painel Técnico
+
+Funcionalidades exclusivas para técnicos:
+
+* Visualização de chamados abertos
+* Atualização de status
+* Registro de execução
+* Controle de manutenção
+
+## Tecnologias Utilizadas
+
+### Backend
+
+* Python 3
+* Django
+* Django Ninja
+* PostgreSQL
+* JWT Authentication
+* Gunicorn
+* Nginx
+
+### Frontend Mobile
+
+* React Native
+* Expo
+* Expo Router
+* TypeScript
+* Axios
+
+## Estrutura dos Perfis
+
+### Usuário Comum
+
+Permissões:
+
+* Visualizar salas
+* Visualizar equipamentos
+* Abrir chamados
+* Acompanhar chamados
+
+Restrições:
+
+* Não define prioridade
+* Não acessa painel técnico
+
+### Servidor
+
+Permissões:
+
+* Todas do usuário comum
+* Definir prioridade dos chamados
+
+### Técnico
+
+Permissões:
+
+* Todas do servidor
+* Gerenciar chamados
+* Alterar status
+* Acessar painel técnico
+* Acessar dashboard administrativo
+
+## Arquitetura
+
+```text
+React Native (Expo)
+          │
+          ▼
+     Django Ninja API
+          │
+          ▼
+      PostgreSQL
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Implantação
 
-### Other setup steps
+### Gunicorn
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+gunicorn --bind 127.0.0.1:8010 consertaai.wsgi:application
+```
 
-## Learn more
+### Nginx
 
-To learn more about developing your project with Expo, look at the following resources:
+API publicada através do subcaminho:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```text
+http://IP_SERVIDOR/api-consertaai/
+```
 
-## Join the community
+Documentação:
 
-Join our community of developers creating universal apps.
+```text
+http://IP_SERVIDOR/api-consertaai/docs
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Admin:
+
+```text
+http://IP_SERVIDOR/admin-consertaai/
+```
+
+## Desenvolvimento
+
+Executar backend:
+
+```bash
+python manage.py runserver
+```
+
+Executar frontend:
+
+```bash
+npx expo start
+```
+
+Gerar APK:
+
+```bash
+npx expo prebuild --clean
+
+cd android
+
+./gradlew assembleRelease
+```
+
+APK gerado em:
+
+```text
+android/app/build/outputs/apk/release/app-release.apk
+```
+
+## Autor
+
+Boris Oliveira
+
+Curso de Ciência da Computação – UERN
+
+Wanderson Marques de Macedo Moura
+
+Curso de Ciência da Computação – UERN
+
+Projeto desenvolvido como solução para gerenciamento de manutenção predial em ambientes acadêmicos.
