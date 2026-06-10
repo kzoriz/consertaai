@@ -43,6 +43,7 @@ type User = {
   first_name: string;
   is_staff: boolean;
   is_tecnico: boolean;
+  tipo_usuario: "COMUM" | "SERVIDOR" | "TECNICO";
   pode_definir_prioridade: boolean;
 };
 

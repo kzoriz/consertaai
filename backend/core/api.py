@@ -97,6 +97,7 @@ class UsuarioSchema(Schema):
     first_name: str
     is_staff: bool
     is_tecnico: bool
+    tipo_usuario: str
     pode_definir_prioridade: bool
 
 
@@ -365,7 +366,13 @@ def login_usuario(request, payload: LoginSchema):
 @api.get("/auth/me", response=UsuarioSchema, auth=jwt_auth)
 def meu_perfil(request):
     user = request.auth
+    tipo_usuario = "COMUM"
 
+    if user.groups.filter(name="Tecnico").exists():
+        tipo_usuario = "TECNICO"
+
+    elif user.groups.filter(name="Servidor").exists():
+        tipo_usuario = "SERVIDOR"
     return {
         "id": user.id,
         "username": user.username,
@@ -373,6 +380,7 @@ def meu_perfil(request):
         "first_name": user.first_name,
         "is_staff": user.is_staff,
         "is_tecnico": usuario_eh_tecnico(user),
+        "tipo_usuario": tipo_usuario,
         "pode_definir_prioridade": usuario_pode_definir_prioridade(user),
     }
 
