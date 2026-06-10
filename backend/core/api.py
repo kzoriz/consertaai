@@ -457,8 +457,30 @@ def listar_chamados(request):
     return Chamado.objects.all()
 
 
-@api.post("/chamados", response=ChamadoSchema, auth=jwt_auth)
+@api.post(
+    "/chamados",
+    response={201: ChamadoSchema, 400: dict},
+    auth=jwt_auth,
+)
 def criar_chamado(request, payload: ChamadoCreateSchema):
+    chamado_ativo = Chamado.objects.filter(
+        equipamento_id=payload.equipamento_id,
+        status_chamado__in=[
+            "ABERTO",
+            "EM_ANDAMENTO",
+        ],
+    ).first()
+
+    if chamado_ativo:
+        return 400, {
+            "erro": (
+                "Já existe um chamado aberto ou em andamento "
+                "para este equipamento."
+            ),
+            "chamado_id": chamado_ativo.id,
+            "status_chamado": chamado_ativo.status_chamado,
+        }
+
     chamado = Chamado.objects.create(
         usuario=request.auth,
         equipamento_id=payload.equipamento_id,
@@ -469,7 +491,7 @@ def criar_chamado(request, payload: ChamadoCreateSchema):
     chamado.equipamento.status_atual = "DEFEITO"
     chamado.equipamento.save()
 
-    return chamado
+    return 201, chamado
 
 
 @api.get("/chamados/{chamado_id}", response=ChamadoSchema, auth=jwt_auth)

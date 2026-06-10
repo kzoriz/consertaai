@@ -96,8 +96,12 @@ export default function EquipamentoDetalheScreen() {
       setDescricao("");
 
       await carregarEquipamento();
-    } catch {
-      Alert.alert("Erro", "Não foi possível abrir o chamado.");
+    } catch (error: any) {
+      const mensagem =
+        error?.response?.data?.erro ||
+        "Não foi possível abrir o chamado.";
+
+      Alert.alert("Atenção", mensagem);
     } finally {
       setEnviando(false);
     }
