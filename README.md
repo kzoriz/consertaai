@@ -2,6 +2,69 @@
 
 Sistema de gestão de manutenção predial desenvolvido para a Universidade do Estado do Rio Grande do Norte (UERN), permitindo que alunos, servidores e técnicos registrem, acompanhem e gerenciem ocorrências em equipamentos e ambientes da instituição.
 
+## 📱 Capturas de Tela
+
+Confira as principais telas do aplicativo:
+
+<p align="center">
+  <img src="docs/images/login.png" width="180"/>
+  <img src="docs/images/cadastro.png" width="180"/>
+  <img src="docs/images/gps.png" width="180"/>
+</p>
+
+<p align="center">
+<b>Login</b> • <b>Cadastro</b> • <b>Validação de Localização</b>
+</p>
+
+---
+
+<p align="center">
+  <img src="docs/images/home.png" width="180"/>
+  <img src="docs/images/painel-tecnico.png" width="180"/>
+  <img src="docs/images/dashboard.png" width="180"/>
+</p>
+
+<p align="center">
+<b>Tela Inicial</b> • <b>Painel Técnico</b> • <b>Dashboard Administrativo</b>
+</p>
+
+---
+
+<p align="center">
+  <img src="docs/images/planta.png" width="180"/>
+  <img src="docs/images/sala-info.png" width="180"/>
+  <img src="docs/images/layout-sala.png" width="180"/>
+</p>
+
+<p align="center">
+<b>Planta Inteligente</b> • <b>Informações da Sala</b> • <b>Layout da Sala</b>
+</p>
+
+---
+
+<p align="center">
+  <img src="docs/images/equipamento.png" width="220"/>
+</p>
+
+<p align="center">
+<b>Detalhes do Equipamento</b>
+</p>
+
+### Descrição das telas
+
+| Tela                | Descrição                                                     |
+| ------------------- | ------------------------------------------------------------- |
+| Login               | Autenticação dos usuários no sistema                          |
+| Cadastro            | Criação de contas para usuários comuns, servidores e técnicos |
+| Validação GPS       | Verifica se o usuário está dentro do perímetro permitido      |
+| Tela Inicial        | Acesso rápido às principais funcionalidades                   |
+| Painel Técnico      | Gerenciamento dos chamados pela equipe técnica                |
+| Dashboard           | Indicadores gerais e planta inteligente                       |
+| Planta Inteligente  | Visualização dos prédios e salas em tempo real                |
+| Informações da Sala | Estatísticas e equipamentos da sala selecionada               |
+| Layout da Sala      | Representação gráfica dos equipamentos                        |
+| Equipamento         | Informações detalhadas e histórico de manutenção              |
+
 ## Objetivo
 
 O Conserta Aí tem como objetivo facilitar a comunicação entre a comunidade acadêmica e a equipe de manutenção, permitindo a abertura e acompanhamento de chamados para equipamentos como luminárias e aparelhos de ar-condicionado, além da visualização da localização física dos ambientes através de plantas interativas dos prédios.
@@ -74,6 +137,7 @@ Funcionalidades exclusivas para técnicos:
 * Atualização de status
 * Registro de execução
 * Controle de manutenção
+
 
 ## Tecnologias Utilizadas
 
